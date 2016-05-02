@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.bwisni.pub1521.EditDrinkerActivity">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/linearLayout">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dialoguePad"
+                android:text="Name"
+                android:id="@+id/textView"
+                android:layout_alignParentStart="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_alignBaseline="@+id/editTextName"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center_horizontal"
+                android:textSize="@dimen/abc_text_size_display_1_material" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="@dimen/dialoguePad"
+                android:layout_height="@dimen/dialoguePad"
+                android:text="Credits"
+                android:id="@+id/textView2"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_alignParentStart="true"
+                android:layout_alignBaseline="@+id/editTextCredit" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/editTextCredit"
+                android:layout_below="@+id/textView"
+                android:layout_alignParentEnd="true"
+                android:layout_toEndOf="@+id/textView"
+                android:inputType="number" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-1"
+                android:id="@+id/minusButton"
+                android:layout_alignWithParentIfMissing="false"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/oneButton"
+                android:layout_alignEnd="@+id/oneButton"
+                android:layout_toLeftOf="@+id/oneButton"
+                android:layout_row="0"
+                android:layout_column="0" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+1"
+                android:id="@+id/oneButton"
+                android:layout_alignWithParentIfMissing="false"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_row="0"
+                android:layout_column="1" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="+6"
+                android:id="@+id/sixButton"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_toEndOf="@+id/oneButton"
+                android:layout_alignParentStart="true"
+                android:layout_row="0"
+                android:layout_column="2"
+                android:layout_columnSpan="2" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="@dimen/dialoguePad"
+                android:layout_height="@dimen/dialoguePad"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="PIN"
+                android:id="@+id/textView3"
+                android:layout_alignParentStart="true"
+                android:layout_alignBaseline="@+id/editTextPw" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberPassword"
+                android:ems="10"
+                android:id="@+id/editTextPw"
+                android:layout_below="@+id/textView2"
+                android:layout_alignParentEnd="true"
+                android:layout_toEndOf="@+id/textView3" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OK"
+        android:id="@+id/okButton"
+        android:layout_below="@+id/linearLayout"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:id="@+id/delButton"
+        android:layout_below="@+id/linearLayout"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>
