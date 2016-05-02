@@ -1,6 +1,5 @@
 package com.bwisni.pub1521;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
@@ -8,7 +7,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -35,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
     @Bind(R.id.fab) FloatingActionButton fab;
+
+    MediaPlayer mediaPlayer;
 
     private ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
 
@@ -82,16 +82,15 @@ public class MainActivity extends AppCompatActivity {
         Gson gson = new Gson();
         String json = sharedPrefs.getString("Pub1521JSON", null);
         Type type = new TypeToken<ArrayList<Drinker>>() {}.getType();
-
-        ArrayList<Drinker> al = gson.fromJson(json, type);
-        drinkersArrayList = al;
+        
+        drinkersArrayList = gson.fromJson(json, type);
 
         drinkersListView.invalidateViews();
     }
 
     @OnItemClick(R.id.drinkersListView) void onItemClick(int position, View view) {
         Drinker d = drinkersArrayList.get(position);
-        MediaPlayer mediaPlayer;
+
 
         if(d.getCredits() == 0){
             mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
@@ -103,9 +102,6 @@ public class MainActivity extends AppCompatActivity {
 
             d.subtractCredit();
         }
-
-        //mediaPlayer.release();
-        //mediaPlayer = null;
 
         Snackbar.make(view, d.getCredits() + " beers remaining", Snackbar.LENGTH_LONG)
                 .setAction("UNDO", null)
@@ -134,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, 0);
     }
 
+    // Returning from a dialogue
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         Log.i("onActivityResult", "called");
@@ -191,14 +188,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
+        mediaPlayer.release();
+        mediaPlayer = null;
+
         saveData();
     }
 
-
-    @Override
-    protected void onResume() {
+    /*@Override
+   protected void onResume() {
         super.onResume();
-    }
+    }*/
 
     public void addDrinker(String name, int credits){
         drinkersArrayList.add(new Drinker(name, credits));
