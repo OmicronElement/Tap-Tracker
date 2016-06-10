@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 
 
 import com.google.gson.Gson;
@@ -32,11 +33,14 @@ import butterknife.OnItemLongClick;
 public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
+    @Bind(R.id.numServedTextView) TextView numServedTextView;
     @Bind(R.id.fab) FloatingActionButton fab;
 
     MediaPlayer mediaPlayer;
 
     private ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
+
+    long totalServed = 9000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
         DrinkerAdapter listAdapter = new DrinkerAdapter(this, drinkersArrayList);
         drinkersListView.setAdapter(listAdapter);
 
-
     }
 
     // Thanks to Shinan Kozak
@@ -82,10 +85,23 @@ public class MainActivity extends AppCompatActivity {
         Gson gson = new Gson();
         String json = sharedPrefs.getString("Pub1521JSON", null);
         Type type = new TypeToken<ArrayList<Drinker>>() {}.getType();
-        
+
         drinkersArrayList = gson.fromJson(json, type);
 
         drinkersListView.invalidateViews();
+
+        countTotalServed();
+        updateTotalServed();
+    }
+
+    private void updateTotalServed() {
+        numServedTextView.setText("Over "+totalServed+" served");
+    }
+
+    private void countTotalServed() {
+        for (Drinker d : drinkersArrayList){
+            totalServed+=d.getTotalDrank();
+        }
     }
 
     @OnItemClick(R.id.drinkersListView) void onItemClick(int position, View view) {
@@ -101,11 +117,17 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer.start();
 
             d.subtractCredit();
+            d.setTotalDrank(d.getTotalDrank() + 1);
+
+            totalServed++;
+            updateTotalServed();
         }
 
         Snackbar.make(view, d.getCredits() + " beers remaining", Snackbar.LENGTH_LONG)
                 .setAction("UNDO", null)
                 .show();
+
+
     }
 
     @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {

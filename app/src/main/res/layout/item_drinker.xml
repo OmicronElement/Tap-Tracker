@@ -8,9 +8,10 @@
         android:layout_height="wrap_content"
         android:text="New Text"
         android:id="@+id/drinkerName"
-        android:textSize="30dp"
+        android:textSize="40dp"
+        android:alpha="1"
         android:layout_centerVertical="true"
-        android:layout_alignParentStart="true" />
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -21,5 +22,5 @@
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
         android:textSize="50dp"
-        android:visibility="invisible" />
+        android:visibility="gone" />
 </RelativeLayout>

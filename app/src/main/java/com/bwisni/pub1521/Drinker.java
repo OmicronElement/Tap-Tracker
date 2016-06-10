@@ -6,11 +6,21 @@ package com.bwisni.pub1521;
 public class Drinker {
     private String name;
     private int credits;
+    private int totalDrank;
 
     public Drinker(String name, int credits){
         this.name = name;
         this.credits = credits;
     }
+
+    public int getTotalDrank() {
+        return totalDrank;
+    }
+
+    public void setTotalDrank(int totalDrank) {
+        this.totalDrank = totalDrank;
+    }
+
 
     public int getCredits() {
         return credits;
