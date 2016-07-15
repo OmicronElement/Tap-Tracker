@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
-        if (requestCode == 1 && resultCode == RESULT_OK && intent != null) {
+        if (requestCode == 2 && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             int credits = intent.getIntExtra("drinkerCredits", 0);
             int position = intent.getIntExtra("drinkerPosition", -1);
@@ -225,9 +225,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-
-        mediaPlayer.release();
-        mediaPlayer = null;
 
         saveData();
     }
