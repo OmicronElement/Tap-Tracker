@@ -10,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -104,43 +105,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @OnItemClick(R.id.drinkersListView) void onItemClick(int position, View view) {
-        Drinker d = drinkersArrayList.get(position);
-
-
-        if(d.getCredits() == 0){
-            mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
-            mediaPlayer.start();
-        }
-        else{
-            mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beer);
-            mediaPlayer.start();
-
-            d.subtractCredit();
-            d.setTotalDrank(d.getTotalDrank() + 1);
-
-            totalServed++;
-            updateTotalServed();
-        }
-
-        Snackbar.make(view, d.getCredits() + " beers remaining", Snackbar.LENGTH_LONG)
-                .setAction("UNDO", null)
-                .show();
-
-
-    }
-
     @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {
-        // Create intent to open up dialogue
+
         Intent intent = new Intent(getApplicationContext(),
-               EditDrinkerActivity.class);
+                ConfirmActivity.class);
 
         intent.putExtra("drinkerPosition", position);
         intent.putExtra("drinkerName", drinkersArrayList.get(position).getName());
         intent.putExtra("drinkerCredits", drinkersArrayList.get(position).getCredits());
 
-        startActivityForResult(intent, 1);
+        startActivityForResult(intent, 2);
+
+
+/*
+        Snackbar.make(view, d.getCredits() + " beers remaining", Snackbar.LENGTH_LONG)
+                .setAction("UNDO", null)
+                .show();
+
+*/
         return true;
+    }
+
+    int counter = 0;
+    @OnItemClick(R.id.drinkersListView) void onItemClick(int position, View view) {
+        counter++;
+        // Require six taps to enter admin dialogue
+        if(counter == 6) {
+            // Create intent to open up dialogue
+            Intent intent = new Intent(getApplicationContext(),
+                    EditDrinkerActivity.class);
+
+            intent.putExtra("drinkerPosition", position);
+            intent.putExtra("drinkerName", drinkersArrayList.get(position).getName());
+            intent.putExtra("drinkerCredits", drinkersArrayList.get(position).getCredits());
+
+            counter = 0;
+
+            startActivityForResult(intent, 1);
+        }
+        //return true;
     }
 
     // Add a drinker
@@ -180,6 +183,19 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+        if (requestCode == 1 && resultCode == RESULT_OK && intent != null) {
+            Log.i("onActivityResult", "RESULT_OK");
+            int credits = intent.getIntExtra("drinkerCredits", 0);
+            int position = intent.getIntExtra("drinkerPosition", -1);
+
+            Drinker d = drinkersArrayList.get(position);
+
+            d.setCredits(credits);
+            d.setTotalDrank(d.getTotalDrank() + 1);
+        }
+
+        totalServed++;
+        updateTotalServed();
     }
 
 

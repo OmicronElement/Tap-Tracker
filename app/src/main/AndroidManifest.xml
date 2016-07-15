@@ -17,15 +17,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AddDrinkerActivity"
+        <activity
+            android:name=".AddDrinkerActivity"
             android:theme="@style/Theme.AppCompat.Dialog"
-            android:windowSoftInputMode = "stateVisible">
-        </activity>
-
-        <activity android:name=".EditDrinkerActivity"
+            android:windowSoftInputMode="stateVisible"></activity>
+        <activity
+            android:name=".EditDrinkerActivity"
             android:theme="@style/Theme.AppCompat.Dialog"
-            android:windowSoftInputMode = "stateVisible">
-        </activity>
+            android:windowSoftInputMode="stateVisible"></activity>
+        <activity
+            android:name=".ConfirmActivity"
+            android:label="@string/title_activity_confirm"
+            android:theme="@style/Theme.AppCompat.NoActionBar"></activity>
     </application>
 
 </manifest>
