@@ -1,49 +1,24 @@
 package com.bwisni.pub1521;
 
+import com.orm.SugarRecord;
+
 /**
  * Created by Bryan on 4/14/2016.
  */
-public class Drinker {
-    private String name;
-    private int credits;
-    private int totalDrank;
+public class Drinker extends SugarRecord {
+    String name = "Default";
+    int credits = 0;
+    int totalDrank = 0;
 
-    public Drinker(String name, int credits){
+    public Drinker() {
+    }
+
+    public Drinker(String name, int credits) {
         this.name = name;
         this.credits = credits;
     }
 
-    public int getTotalDrank() {
-        return totalDrank;
+    public String toString(){
+        return (this.name + " : " + this.credits);
     }
-
-    public void setTotalDrank(int totalDrank) {
-        this.totalDrank = totalDrank;
-    }
-
-
-    public int getCredits() {
-        return credits;
-    }
-
-    public void setCredits(int credits) {
-        this.credits = credits;
-    }
-
-    public void addCredits(int credits) {
-        this.credits += credits;
-    }
-    public void subtractCredit() {
-        this.credits--;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-
 }

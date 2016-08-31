@@ -41,8 +41,8 @@ public class DrinkerAdapter extends ArrayAdapter<Drinker> {
             viewHolder = (ViewHolder) convertView.getTag();
         }
         // Populate the data into the template view using the data object
-        viewHolder.name.setText(drinker.getName());
-        viewHolder.credits.setText(Integer.toString(drinker.getCredits()));
+        viewHolder.name.setText(drinker.name);
+        viewHolder.credits.setText(Integer.toString(drinker.credits));
         // Return the completed view to render on screen
         return convertView;
     }

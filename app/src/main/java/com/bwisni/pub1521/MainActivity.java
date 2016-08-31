@@ -20,9 +20,11 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.orm.SugarContext;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -39,9 +41,9 @@ public class MainActivity extends AppCompatActivity {
 
     MediaPlayer mediaPlayer;
 
-    private ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
+    ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
 
-    long totalServed = 9000;
+    long totalServed = 30000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,57 +53,56 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         ButterKnife.bind(this);
+        SugarContext.init(getApplicationContext());
 
-        /*
-        drinkersArrayList.add(new Drinker("Jon", 5));
-        drinkersArrayList.add(new Drinker("Ken", 5));
-        drinkersArrayList.add(new Drinker("Chris", 5));
-
-        saveData();
-        */
+        //drinkersArrayList.add(new Drinker("Jon", 5));
+        //saveData();
 
         loadData();
 
-        DrinkerAdapter listAdapter = new DrinkerAdapter(this, drinkersArrayList);
-        drinkersListView.setAdapter(listAdapter);
-
     }
 
-    // Thanks to Shinan Kozak
     private void saveData() {
-        Log.i("JSON", "saveData");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPrefs.edit();
-        Gson gson = new Gson();
-
-        String json = gson.toJson(drinkersArrayList);
-
-        editor.putString("Pub1521JSON", json);
-        editor.commit();
+        for (Drinker d : drinkersArrayList){
+            d.save();
+        }
     }
 
     private void loadData() {
-        Log.i("JSON", "loadData");
+        /*Log.i("JSON", "loadData");
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Gson gson = new Gson();
         String json = sharedPrefs.getString("Pub1521JSON", null);
         Type type = new TypeToken<ArrayList<Drinker>>() {}.getType();
 
-        drinkersArrayList = gson.fromJson(json, type);
+        drinkersArrayList = gson.fromJson(json, type);*/
+
+        drinkersArrayList = new ArrayList<>(Drinker.listAll(Drinker.class));
+
+        printarr();
+
+
+        DrinkerAdapter listAdapter = new DrinkerAdapter(this, drinkersArrayList);
+        drinkersListView.setAdapter(listAdapter);
 
         drinkersListView.invalidateViews();
 
         countTotalServed();
         updateTotalServed();
     }
+    private void printarr(){
+        for(Drinker d : drinkersArrayList)
+            Log.d("ARRAY",d.toString());
 
+        drinkersListView.toString();
+    }
     private void updateTotalServed() {
         numServedTextView.setText("Over "+totalServed+" served");
     }
 
     private void countTotalServed() {
         for (Drinker d : drinkersArrayList){
-            totalServed+=d.getTotalDrank();
+            totalServed+=d.totalDrank;
         }
     }
 
@@ -111,8 +112,8 @@ public class MainActivity extends AppCompatActivity {
                 ConfirmActivity.class);
 
         intent.putExtra("drinkerPosition", position);
-        intent.putExtra("drinkerName", drinkersArrayList.get(position).getName());
-        intent.putExtra("drinkerCredits", drinkersArrayList.get(position).getCredits());
+        intent.putExtra("drinkerName", drinkersArrayList.get(position).name);
+        intent.putExtra("drinkerCredits", drinkersArrayList.get(position).credits);
 
         startActivityForResult(intent, 2);
 
@@ -136,8 +137,8 @@ public class MainActivity extends AppCompatActivity {
                     EditDrinkerActivity.class);
 
             intent.putExtra("drinkerPosition", position);
-            intent.putExtra("drinkerName", drinkersArrayList.get(position).getName());
-            intent.putExtra("drinkerCredits", drinkersArrayList.get(position).getCredits());
+            intent.putExtra("drinkerName", drinkersArrayList.get(position).name);
+            intent.putExtra("drinkerCredits", drinkersArrayList.get(position).credits);
 
             counter = 0;
 
@@ -179,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else{
                 Drinker drinker = drinkersArrayList.get(position);
-                drinker.setCredits(credits);
+                drinker.credits = credits;
             }
 
         }
@@ -190,8 +191,8 @@ public class MainActivity extends AppCompatActivity {
 
             Drinker d = drinkersArrayList.get(position);
 
-            d.setCredits(credits);
-            d.setTotalDrank(d.getTotalDrank() + 1);
+            d.credits = credits;
+            d.totalDrank++;
         }
 
         totalServed++;
@@ -227,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         saveData();
+        //SugarContext.terminate();
     }
 
     /*@Override
