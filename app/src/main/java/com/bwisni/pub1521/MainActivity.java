@@ -1,31 +1,23 @@
 package com.bwisni.pub1521;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.Toolbar;
 
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.orm.SugarContext;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -33,53 +25,45 @@ import butterknife.OnItemClick;
 import butterknife.OnItemLongClick;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends NfcActivity {
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
     @Bind(R.id.numServedTextView) TextView numServedTextView;
     @Bind(R.id.fab) FloatingActionButton fab;
 
-    MediaPlayer mediaPlayer;
-
     ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
 
-    long totalServed = 30000;
+    long totalServed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setActionBar(toolbar);
 
         ButterKnife.bind(this);
         SugarContext.init(getApplicationContext());
 
-        //drinkersArrayList.add(new Drinker("Jon", 5));
-        //saveData();
+        Drinker.deleteAll(Drinker.class);
+        drinkersArrayList.add(new Drinker("Jon",6,"entest"));
+        saveData();
 
         loadData();
-
     }
 
     private void saveData() {
         for (Drinker d : drinkersArrayList){
-            d.save();
+            Drinker drinkerEntry = Drinker.findById(Drinker.class, d.getId());
+            drinkerEntry = d;
+            drinkerEntry.save();
         }
     }
 
     private void loadData() {
-        /*Log.i("JSON", "loadData");
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        Gson gson = new Gson();
-        String json = sharedPrefs.getString("Pub1521JSON", null);
-        Type type = new TypeToken<ArrayList<Drinker>>() {}.getType();
-
-        drinkersArrayList = gson.fromJson(json, type);*/
-
         drinkersArrayList = new ArrayList<>(Drinker.listAll(Drinker.class));
 
-        printarr();
+        printArr();
 
 
         DrinkerAdapter listAdapter = new DrinkerAdapter(this, drinkersArrayList);
@@ -90,41 +74,37 @@ public class MainActivity extends AppCompatActivity {
         countTotalServed();
         updateTotalServed();
     }
-    private void printarr(){
+    private void printArr(){
         for(Drinker d : drinkersArrayList)
             Log.d("ARRAY",d.toString());
 
         drinkersListView.toString();
     }
     private void updateTotalServed() {
+        countTotalServed();
         numServedTextView.setText("Over "+totalServed+" served");
     }
 
     private void countTotalServed() {
+        totalServed = 30000;
         for (Drinker d : drinkersArrayList){
             totalServed+=d.totalDrank;
         }
     }
 
     @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {
+        openConfirmActivity(position);
+        return true;
+    }
 
+    private void openConfirmActivity(int position) {
         Intent intent = new Intent(getApplicationContext(),
                 ConfirmActivity.class);
 
+        intent.putExtra("drinker", drinkersArrayList.get(position));
         intent.putExtra("drinkerPosition", position);
-        intent.putExtra("drinkerName", drinkersArrayList.get(position).name);
-        intent.putExtra("drinkerCredits", drinkersArrayList.get(position).credits);
 
         startActivityForResult(intent, 2);
-
-
-/*
-        Snackbar.make(view, d.getCredits() + " beers remaining", Snackbar.LENGTH_LONG)
-                .setAction("UNDO", null)
-                .show();
-
-*/
-        return true;
     }
 
     int counter = 0;
@@ -165,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("onActivityResult", "RESULT_OK");
             String name = intent.getStringExtra("name");
 
-            addDrinker(name, 0);
+            addDrinker(name, 0, "");
         }
 
         if (requestCode == 1 && resultCode == RESULT_OK && intent != null) {
@@ -186,16 +166,13 @@ public class MainActivity extends AppCompatActivity {
         }
         if (requestCode == 2 && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
-            int credits = intent.getIntExtra("drinkerCredits", 0);
             int position = intent.getIntExtra("drinkerPosition", -1);
 
-            Drinker d = drinkersArrayList.get(position);
+            drinkersArrayList.get(position).subtractCredit();
 
-            d.credits = credits;
-            d.totalDrank++;
+            totalServed++;
         }
 
-        totalServed++;
         updateTotalServed();
     }
 
@@ -228,7 +205,33 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         saveData();
-        //SugarContext.terminate();
+    }
+
+    //Called when NFC Tag has been read
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        /*for (String message : getNfcMessages()){
+            Toast.makeText(this,message,Toast.LENGTH_SHORT).show();
+        }*/
+
+        List<String> msgs = getNfcMessages();
+
+        //byte[] rawMessage = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
+        //String id = rawMessage.toString();
+
+
+        for(String s : msgs){
+            Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+
+            for(Drinker d : drinkersArrayList) {
+               if(s.equals(d.nfcId)) {
+                   openConfirmActivity(drinkersArrayList.indexOf(d));
+                   break;
+               }
+           }
+        }
+
     }
 
     /*@Override
@@ -236,14 +239,15 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
     }*/
 
-    public void addDrinker(String name, int credits){
-        drinkersArrayList.add(new Drinker(name, credits));
+    public void addDrinker(String name, int credits, String id){
+        drinkersArrayList.add(new Drinker(name, credits, id));
         saveData();
         drinkersListView.invalidateViews();
     }
 
     public void removeDrinker(int position){
-        drinkersArrayList.remove(position);
+        //Remove from arraylist and delete() sugar record
+        drinkersArrayList.remove(position).delete();
         saveData();
         drinkersListView.invalidateViews();
     }

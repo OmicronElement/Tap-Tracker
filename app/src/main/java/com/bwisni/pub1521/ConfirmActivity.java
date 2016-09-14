@@ -19,8 +19,9 @@ public class ConfirmActivity extends AppCompatActivity {
     @Bind(R.id.pourButton) Button pourButton;
 
     MediaPlayer mediaPlayer;
-    int credits;
     int position;
+    Drinker drinker;
+    String nfcId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,18 +34,30 @@ public class ConfirmActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        position = intent.getIntExtra("drinkerPosition", -1);
-        credits = intent.getIntExtra("drinkerCredits", 0);
-        String name = intent.getStringExtra("drinkerName");
+        drinker = (Drinker) intent.getSerializableExtra("drinker");
+        position = intent.getIntExtra("drinkerPosition", 0);
+
+        String name = drinker.name;
+        nfcId = drinker.nfcId;
 
         nameTextView.setText(name);
-        creditsTextView.setText(Integer.toString(credits));
+        creditsTextView.setText(Integer.toString(drinker.credits));
+
+        // Execute after 1 second has passed
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                pourDrink();
+            }
+        }, 1000);
+
     }
 
     @OnClick({R.id.pourButton}) void pourDrink(){
         pourButton.setEnabled(false);
 
-        if(credits == 0){
+        if(drinker.credits == 0){
             mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
             mediaPlayer.start();
         }
@@ -52,8 +65,8 @@ public class ConfirmActivity extends AppCompatActivity {
             mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beer);
             mediaPlayer.start();
 
-            credits--;
-            creditsTextView.setText(Integer.toString(credits));
+            drinker.subtractCredit();
+            creditsTextView.setText(Integer.toString(drinker.credits));
         }
         // Execute after 2 seconds have passed
         Handler handler = new Handler();
@@ -71,7 +84,7 @@ public class ConfirmActivity extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
         intent.putExtra("drinkerPosition", position);
-        intent.putExtra("drinkerCredits", credits);
+        intent.putExtra("drinker", drinker);
         setResult(RESULT_OK, intent);
         finish();
     }
