@@ -1,12 +1,16 @@
 package com.bwisni.pub1521;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -195,11 +199,47 @@ public class MainActivity extends NfcActivity {
         }
 
         if (id == R.id.action_admin) {
-            drinkersListView.setVisibility(View.VISIBLE);
+            checkAdminPassword();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void checkAdminPassword() {
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle("Administrator Code");
+
+        final EditText input = new EditText(this);
+        /*input.setInputType(InputType.TYPE_NUMBER_VARIATION_PASSWORD); //Doesn't work
+        input.requestFocus();*/
+
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                // If password is correct, show drinkers list
+                if(value.trim().equals("0323")){
+                    drinkersListView.setVisibility(View.VISIBLE);
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "Incorrect code.", Toast.LENGTH_LONG).show();
+                }
+
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+            }
+        });
+
+        alert.show();
+
+
     }
 
     @Override

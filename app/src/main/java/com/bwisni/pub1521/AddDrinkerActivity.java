@@ -3,6 +3,7 @@ package com.bwisni.pub1521;
 import android.content.Intent;
 import android.nfc.FormatException;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -46,6 +47,8 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
 
         ButterKnife.bind(this);
 
+        editTextName.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
+        editTextName.requestFocus();
     }
 
     void okAddDrinker(){
@@ -67,7 +70,8 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        new WriteSmsNfcAsync(this, mAsyncOperationCallback).executeWriteOperation();
+        if(editTextName.getText().toString() != "")
+            new WriteSmsNfcAsync(this, mAsyncOperationCallback).executeWriteOperation();
     }
 
     @Override

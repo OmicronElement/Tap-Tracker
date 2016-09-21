@@ -1,22 +1,19 @@
 package com.bwisni.pub1521;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
-public class ConfirmActivity extends AppCompatActivity {
+public class ConfirmActivity extends Activity {
     @Bind(R.id.drinkerConfirmName) TextView nameTextView;
     @Bind(R.id.drinkerConfirmCredits) TextView creditsTextView;
-    @Bind(R.id.pourButton) Button pourButton;
 
     MediaPlayer mediaPlayer;
     int position;
@@ -28,7 +25,7 @@ public class ConfirmActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confirm);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setActionBar(toolbar);
 
         ButterKnife.bind(this);
 
@@ -54,9 +51,7 @@ public class ConfirmActivity extends AppCompatActivity {
 
     }
 
-    @OnClick({R.id.pourButton}) void pourDrink(){
-        pourButton.setEnabled(false);
-
+    void pourDrink(){
         if(drinker.credits == 0){
             mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
             mediaPlayer.start();
@@ -68,6 +63,7 @@ public class ConfirmActivity extends AppCompatActivity {
             drinker.subtractCredit();
             creditsTextView.setText(Integer.toString(drinker.credits));
         }
+
         // Execute after 2 seconds have passed
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -76,8 +72,6 @@ public class ConfirmActivity extends AppCompatActivity {
                 finishActivity();
             }
         }, 2000);
-
-
     }
 
     private void finishActivity() {

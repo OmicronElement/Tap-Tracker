@@ -17,7 +17,7 @@
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dialoguePad"
+            android:layout_height="wrap_content"
             android:text="Name"
             android:id="@+id/textView"
             android:layout_alignParentStart="true"
@@ -25,18 +25,17 @@
             android:layout_alignBaseline="@+id/editTextName"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
-            android:textSize="@dimen/abc_text_size_display_1_material" />
+            android:textSize="@dimen/abc_text_size_headline_material" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dialoguePad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:id="@+id/nfcIdtextView"
             android:layout_alignParentStart="true"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:layout_alignBaseline="@+id/editTextName"
             android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:textSize="@dimen/abc_text_size_display_1_material" />
+            android:gravity="center_horizontal" />
 
         <LinearLayout
             android:orientation="horizontal"
@@ -54,7 +53,7 @@
                 android:layout_alignBaseline="@+id/editTextCredit" />
 
             <EditText
-                android:layout_width="match_parent"
+                android:layout_width="75dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/editTextCredit"
                 android:layout_below="@+id/textView"
@@ -108,33 +107,6 @@
                 android:layout_columnSpan="2" />
         </LinearLayout>
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <TextView
-                android:layout_width="@dimen/dialoguePad"
-                android:layout_height="@dimen/dialoguePad"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="PIN"
-                android:id="@+id/textView3"
-                android:layout_alignParentStart="true"
-                android:layout_alignBaseline="@+id/editTextPw" />
-
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberPassword"
-                android:ems="10"
-                android:id="@+id/editTextPw"
-                android:layout_below="@+id/textView2"
-                android:layout_alignParentEnd="true"
-                android:layout_toEndOf="@+id/textView3" />
-
-        </LinearLayout>
-
     </LinearLayout>
 
     <Button
@@ -144,13 +116,5 @@
         android:id="@+id/okButton"
         android:layout_below="@+id/linearLayout"
         android:layout_centerHorizontal="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
-        android:id="@+id/delButton"
-        android:layout_below="@+id/linearLayout"
-        android:layout_alignParentStart="true" />
 
 </RelativeLayout>

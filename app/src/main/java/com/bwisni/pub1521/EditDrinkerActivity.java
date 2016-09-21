@@ -1,25 +1,20 @@
 package com.bwisni.pub1521;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
-import android.view.View;
+
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
-import be.appfoundry.nfclibrary.tasks.interfaces.AsyncUiCallback;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 
-public class EditDrinkerActivity extends AppCompatActivity{
+public class EditDrinkerActivity extends Activity {
     @Bind(R.id.editTextCredit) EditText editTextCredit;
-    @Bind(R.id.editTextPw) EditText editTextPw;
     @Bind(R.id.textView) TextView nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
 
@@ -31,7 +26,6 @@ public class EditDrinkerActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_drinker);
-        setTitle("Beer Here!");
 
         ButterKnife.bind(this);
 
@@ -48,8 +42,6 @@ public class EditDrinkerActivity extends AppCompatActivity{
         nfcIdTextView.setText(nfcId);
 
         refreshCreditEditText();
-
-        editTextPw.requestFocus();
     }
 
     private void refreshCreditEditText() {
@@ -59,29 +51,25 @@ public class EditDrinkerActivity extends AppCompatActivity{
 
     @OnClick({R.id.okButton})
     void editDrinker(Button b) {
-        //String name = editTextName.getText().toString();
-        String password = editTextPw.getText().toString().trim();
         credits = Integer.parseInt(editTextCredit.getText().toString());
 
         // Sanity check
         credits = Math.abs(credits);
 
-        Log.i("PASS", password);
-        if (password.equals("0323")){
-            // Send data back to Main activity
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        // Send data back to Main activity
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
-            intent.putExtra("drinkerPosition", position);
-            intent.putExtra("drinkerCredits", credits);
-            intent.putExtra("delete", false);
+        intent.putExtra("drinkerPosition", position);
+        intent.putExtra("drinkerCredits", credits);
+        intent.putExtra("delete", false);
 
-            setResult(RESULT_OK, intent);
-            finish();
-        }
+        setResult(RESULT_OK, intent);
+        finish();
+
     }
 
-    @OnClick({R.id.delButton})
-    void delDrinker(Button b) {
+    @OnLongClick({R.id.okButton})
+    boolean delDrinker(Button b) {
 
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
@@ -92,6 +80,7 @@ public class EditDrinkerActivity extends AppCompatActivity{
         setResult(RESULT_OK, intent);
         finish();
 
+        return true;
     }
 
     @OnClick({R.id.oneButton})
