@@ -11,7 +11,7 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.bwisni.pub1521.MainActivity"
     tools:showIn="@layout/activity_main"
-    android:background="@color/material_blue_grey_900">
+    android:background="@color/background_material_dark">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -42,7 +42,8 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
             android:layout_below="@+id/numServedTextView"
-            android:alpha="100" />
+            android:alpha="100"
+            android:visibility="invisible" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -55,7 +56,7 @@
             android:layout_alignParentStart="true"
             android:gravity="center_horizontal"
             android:textSize="@dimen/abc_text_size_display_2_material"
-            android:textColor="@color/design_textinput_error_color_light" />
+            android:textColor="@android:color/holo_blue_dark" />
 
     </RelativeLayout>
 

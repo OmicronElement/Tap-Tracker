@@ -19,8 +19,14 @@
         android:id="@+id/drinkerConfirmName"
         android:textSize="40dp"
         android:alpha="1"
-        android:layout_alignTop="@+id/drinkerConfirmCredits"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Space
+        android:layout_width="fill_parent"
+        android:layout_height="100px"
+        android:layout_below="@+id/drinkerConfirmName"
+        android:id="@+id/space" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -29,14 +35,18 @@
         android:id="@+id/drinkerConfirmCredits"
         android:layout_gravity="right"
         android:textSize="50dp"
-        android:layout_centerVertical="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_below="@+id/space"
+        android:layout_centerHorizontal="true"
+        android:textColor="@android:color/holo_blue_dark" />
 
-    <Button
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pour"
-        android:id="@+id/pourButton"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true" />
+        android:text="@string/creditsString"
+        android:id="@+id/creditsString"
+        android:layout_gravity="right"
+        android:textSize="50dp"
+        android:layout_below="@+id/drinkerConfirmCredits"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>

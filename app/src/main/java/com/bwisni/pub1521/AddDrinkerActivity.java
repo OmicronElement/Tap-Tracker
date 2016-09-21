@@ -1,17 +1,42 @@
 package com.bwisni.pub1521;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.nfc.FormatException;
 import android.os.Bundle;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import java.util.UUID;
+
+import be.appfoundry.nfclibrary.activities.NfcActivity;
+import be.appfoundry.nfclibrary.exceptions.InsufficientCapacityException;
+import be.appfoundry.nfclibrary.exceptions.ReadOnlyTagException;
+import be.appfoundry.nfclibrary.exceptions.TagNotPresentException;
+import be.appfoundry.nfclibrary.tasks.interfaces.AsyncOperationCallback;
+import be.appfoundry.nfclibrary.tasks.interfaces.AsyncUiCallback;
+import be.appfoundry.nfclibrary.utilities.async.WriteSmsNfcAsync;
+import be.appfoundry.nfclibrary.utilities.interfaces.NfcWriteUtility;
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
-public class AddDrinkerActivity extends AppCompatActivity {
+public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     @Bind(R.id.editTextName) EditText editTextName;
+
+    // Generate unique user id
+    String uuid = UUID.randomUUID().toString();
+
+    AsyncOperationCallback mAsyncOperationCallback = new AsyncOperationCallback() {
+
+        @Override
+        public boolean performWrite(NfcWriteUtility writeUtility) throws ReadOnlyTagException, InsufficientCapacityException, TagNotPresentException, FormatException {
+
+            //NdefMessage ndefMessage = new NdefMessage(uuid.getBytes());
+
+            return writeUtility.writeSmsToTagFromIntent("1521", uuid, getIntent());
+        }
+
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,8 +48,7 @@ public class AddDrinkerActivity extends AppCompatActivity {
 
     }
 
-    @OnClick({R.id.okButton})
-    void okAddDrinker(Button b){
+    void okAddDrinker(){
         String name = editTextName.getText().toString();
 
         if(!name.equals("")) {
@@ -32,10 +56,36 @@ public class AddDrinkerActivity extends AppCompatActivity {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
             intent.putExtra("name", name);
+            intent.putExtra("nfcId", uuid);
 
             setResult(RESULT_OK, intent);
             finish();
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        new WriteSmsNfcAsync(this, mAsyncOperationCallback).executeWriteOperation();
+    }
+
+    @Override
+    public void callbackWithReturnValue(Boolean result) {
+        if (result == true){
+            okAddDrinker();
+        }
+    }
+
+    @Override
+    public void onProgressUpdate(Boolean... booleans) {
+        Toast.makeText(this, booleans[0] ? "We started writing" : "We could not write!",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onError(Exception e) {
+        //Toast.makeText(this,"error",Toast.LENGTH_SHORT).show();
+        Log.e("NFC",e.getMessage());
     }
 }
 

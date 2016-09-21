@@ -12,14 +12,16 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import be.appfoundry.nfclibrary.tasks.interfaces.AsyncUiCallback;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class EditDrinkerActivity extends AppCompatActivity {
+public class EditDrinkerActivity extends AppCompatActivity{
     @Bind(R.id.editTextCredit) EditText editTextCredit;
     @Bind(R.id.editTextPw) EditText editTextPw;
     @Bind(R.id.textView) TextView nameTextView;
+    @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
 
 
     int position;
@@ -35,11 +37,15 @@ public class EditDrinkerActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
+        Drinker drinker = (Drinker) intent.getSerializableExtra("drinker");
+
         position = intent.getIntExtra("drinkerPosition", -1);
-        credits = intent.getIntExtra("drinkerCredits", 0);
-        String name = intent.getStringExtra("drinkerName");
+        credits = drinker.credits;
+        String name = drinker.name;
+        String nfcId = drinker.nfcId;
 
         nameTextView.setText(name);
+        nfcIdTextView.setText(nfcId);
 
         refreshCreditEditText();
 
@@ -56,6 +62,9 @@ public class EditDrinkerActivity extends AppCompatActivity {
         //String name = editTextName.getText().toString();
         String password = editTextPw.getText().toString().trim();
         credits = Integer.parseInt(editTextCredit.getText().toString());
+
+        // Sanity check
+        credits = Math.abs(credits);
 
         Log.i("PASS", password);
         if (password.equals("0323")){

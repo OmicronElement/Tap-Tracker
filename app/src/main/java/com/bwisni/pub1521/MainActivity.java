@@ -21,7 +21,6 @@ import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnItemClick;
 import butterknife.OnItemLongClick;
 
 
@@ -54,9 +53,7 @@ public class MainActivity extends NfcActivity {
 
     private void saveData() {
         for (Drinker d : drinkersArrayList){
-            Drinker drinkerEntry = Drinker.findById(Drinker.class, d.getId());
-            drinkerEntry = d;
-            drinkerEntry.save();
+            d.save();
         }
     }
 
@@ -92,10 +89,6 @@ public class MainActivity extends NfcActivity {
         }
     }
 
-    @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {
-        openConfirmActivity(position);
-        return true;
-    }
 
     private void openConfirmActivity(int position) {
         Intent intent = new Intent(getApplicationContext(),
@@ -107,24 +100,24 @@ public class MainActivity extends NfcActivity {
         startActivityForResult(intent, 2);
     }
 
-    int counter = 0;
-    @OnItemClick(R.id.drinkersListView) void onItemClick(int position, View view) {
-        counter++;
+    @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {
         // Require six taps to enter admin dialogue
-        if(counter == 6) {
-            // Create intent to open up dialogue
-            Intent intent = new Intent(getApplicationContext(),
-                    EditDrinkerActivity.class);
 
-            intent.putExtra("drinkerPosition", position);
-            intent.putExtra("drinkerName", drinkersArrayList.get(position).name);
-            intent.putExtra("drinkerCredits", drinkersArrayList.get(position).credits);
+        // Create intent to open up dialogue
+        Intent intent = new Intent(getApplicationContext(),
+                EditDrinkerActivity.class);
 
-            counter = 0;
 
-            startActivityForResult(intent, 1);
-        }
-        //return true;
+        intent.putExtra("drinker", drinkersArrayList.get(position));
+        intent.putExtra("drinkerPosition", position);
+        /*intent.putExtra("drinkerName", drinkersArrayList.get(position).name);
+        intent.putExtra("drinkerCredits", drinkersArrayList.get(position).credits);*/
+
+        drinkersListView.setVisibility(View.INVISIBLE);
+
+        startActivityForResult(intent, 1);
+
+        return true;
     }
 
     // Add a drinker
@@ -141,13 +134,16 @@ public class MainActivity extends NfcActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         Log.i("onActivityResult", "called");
 
+        // Returning from Add Drinker
         if (requestCode == 0 && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             String name = intent.getStringExtra("name");
+            String nfcId = intent.getStringExtra("nfcId");
 
-            addDrinker(name, 0, "");
+            // Start with 6 credits
+            addDrinker(name, 6, nfcId);
         }
-
+        // Returning from Edit Drinker
         if (requestCode == 1 && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             int credits = intent.getIntExtra("drinkerCredits", 0);
@@ -164,6 +160,7 @@ public class MainActivity extends NfcActivity {
             }
 
         }
+        // Returning from Confirm
         if (requestCode == 2 && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             int position = intent.getIntExtra("drinkerPosition", -1);
@@ -197,6 +194,11 @@ public class MainActivity extends NfcActivity {
             return true;
         }
 
+        if (id == R.id.action_admin) {
+            drinkersListView.setVisibility(View.VISIBLE);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -225,7 +227,8 @@ public class MainActivity extends NfcActivity {
             Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
 
             for(Drinker d : drinkersArrayList) {
-               if(s.equals(d.nfcId)) {
+               String record = "sms:1521?body="+d.nfcId;
+                if(s.equals(record)) {
                    openConfirmActivity(drinkersArrayList.indexOf(d));
                    break;
                }
