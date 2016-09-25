@@ -1,19 +1,25 @@
 package com.bwisni.pub1521;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toolbar;
+import android.widget.ViewSwitcher;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class ConfirmActivity extends Activity {
     @Bind(R.id.drinkerConfirmName) TextView nameTextView;
-    @Bind(R.id.drinkerConfirmCredits) TextView creditsTextView;
+    @Bind(R.id.drinkerConfirmCredits) TextSwitcher creditsTextView;
 
     MediaPlayer mediaPlayer;
     int position;
@@ -31,6 +37,28 @@ public class ConfirmActivity extends Activity {
         ButterKnife.bind(this);
 
         Intent intent = getIntent();
+        final Context context = getApplicationContext();
+
+        // specify the in/out animations you wish to use
+        //creditsTextView.setInAnimation(context, android.support.design.R.anim.abc_fade_in);
+        creditsTextView.setOutAnimation(context,android.support.design.R.anim.abc_slide_out_bottom);
+
+        creditsTextView.setFactory(new ViewSwitcher.ViewFactory() {
+
+            public View makeView() {
+                TextView myText = new TextView(context);
+                myText.setGravity(Gravity.CENTER);
+
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER);
+                myText.setLayoutParams(params);
+
+                myText.setTextSize(112);
+                myText.setTextColor(getResources().getColor(R.color.colorAccent));
+                return myText;
+            }
+        });
 
         drinker = (Drinker) intent.getSerializableExtra("drinker");
         position = intent.getIntExtra("drinkerPosition", 0);

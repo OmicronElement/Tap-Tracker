@@ -22,16 +22,14 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 
-    <TextView
+    <TextSwitcher
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Text"
         android:id="@+id/drinkerConfirmCredits"
         android:layout_gravity="right"
-        android:textSize="@dimen/abc_text_size_display_4_material"
         android:layout_centerHorizontal="true"
-        android:textColor="@color/colorAccent"
         android:layout_below="@+id/drinkerConfirmName" />
+
 
     <TextView
         android:layout_width="wrap_content"

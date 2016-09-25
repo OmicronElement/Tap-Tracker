@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import java.util.UUID;
 
@@ -32,10 +31,9 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
 
         @Override
         public boolean performWrite(NfcWriteUtility writeUtility) throws ReadOnlyTagException, InsufficientCapacityException, TagNotPresentException, FormatException {
+        //NdefMessage ndefMessage = new NdefMessage(uuid.getBytes());
 
-            //NdefMessage ndefMessage = new NdefMessage(uuid.getBytes());
-
-            return writeUtility.writeSmsToTagFromIntent(SMS_NUMBER, uuid, getIntent());
+        return writeUtility.writeSmsToTagFromIntent(SMS_NUMBER, uuid, getIntent());
         }
 
     };
@@ -78,13 +76,14 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     @Override
     public void callbackWithReturnValue(Boolean result) {
         if (result == true){
+            Log.i("NFC", "Wrote UUID to tag:"+uuid);
             okAddDrinker();
         }
     }
 
     @Override
     public void onProgressUpdate(Boolean... booleans) {
-        Toast.makeText(this, booleans[0] ? "We started writing" : "We could not write!",Toast.LENGTH_SHORT).show();
+        Log.i("NFC", booleans[0] ? "We started writing" : "We could not write!");
     }
 
     @Override
