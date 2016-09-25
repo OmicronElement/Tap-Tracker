@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingBottom="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.bwisni.pub1521.MainActivity"
@@ -16,34 +16,6 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-        <pl.droidsonroids.gif.GifTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/starView"
-            android:background="@drawable/ninja"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
-
-        <pl.droidsonroids.gif.GifTextView
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:id="@+id/fireView"
-            android:background="@drawable/fire"
-            android:alpha=".75"
-            android:layout_alignTop="@+id/starView" />
-
-        <ListView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/drinkersListView"
-            android:layout_alignParentEnd="false"
-            android:layout_alignParentRight="false"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/numServedTextView"
-            android:alpha="100"
-            android:visibility="invisible" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -55,8 +27,28 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:gravity="center_horizontal"
-            android:textSize="@dimen/abc_text_size_display_2_material"
-            android:textColor="@android:color/holo_blue_dark" />
+            android:textSize="@dimen/abc_text_size_display_3_material"
+            android:textColor="@color/primary_text_default_material_dark" />
+
+        <ListView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/drinkersListView"
+            android:layout_alignParentEnd="false"
+            android:layout_alignParentRight="false"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:alpha="100"
+            android:visibility="invisible"
+            android:layout_below="@+id/numServedTextView" />
+
+        <pl.droidsonroids.gif.GifTextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/fireView"
+            android:background="@drawable/animated_fire"
+            android:layout_below="@+id/numServedTextView"
+            android:layout_alignParentEnd="true" />
 
     </RelativeLayout>
 

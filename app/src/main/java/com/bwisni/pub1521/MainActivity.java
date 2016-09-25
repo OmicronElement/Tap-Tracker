@@ -1,16 +1,14 @@
 package com.bwisni.pub1521;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,8 +16,10 @@ import android.widget.Toolbar;
 
 import com.orm.SugarContext;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
@@ -29,6 +29,8 @@ import butterknife.OnItemLongClick;
 
 
 public class MainActivity extends NfcActivity {
+    public static final String NDEF_PREFIX = "sms:"+AddDrinkerActivity.SMS_NUMBER+"?body=";
+    public static final String ADMIN_NFC_ID = "";
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
     @Bind(R.id.numServedTextView) TextView numServedTextView;
@@ -36,7 +38,7 @@ public class MainActivity extends NfcActivity {
 
     ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
 
-    long totalServed;
+    private long totalServed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +50,12 @@ public class MainActivity extends NfcActivity {
         ButterKnife.bind(this);
         SugarContext.init(getApplicationContext());
 
-        Drinker.deleteAll(Drinker.class);
+
+        /*Drinker.deleteAll(Drinker.class);
         drinkersArrayList.add(new Drinker("Jon",6,"entest"));
-        saveData();
+        saveData();*/
+
+        drinkersListView.bringToFront();
 
         loadData();
     }
@@ -59,6 +64,12 @@ public class MainActivity extends NfcActivity {
         for (Drinker d : drinkersArrayList){
             d.save();
         }
+
+        // Save totalServed to SharedPrefs
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong("totalServed", totalServed);
+        editor.commit();
     }
 
     private void loadData() {
@@ -66,31 +77,26 @@ public class MainActivity extends NfcActivity {
 
         printArr();
 
-
         DrinkerAdapter listAdapter = new DrinkerAdapter(this, drinkersArrayList);
         drinkersListView.setAdapter(listAdapter);
 
         drinkersListView.invalidateViews();
 
-        countTotalServed();
         updateTotalServed();
     }
+
     private void printArr(){
         for(Drinker d : drinkersArrayList)
             Log.d("ARRAY",d.toString());
 
         drinkersListView.toString();
     }
-    private void updateTotalServed() {
-        countTotalServed();
-        numServedTextView.setText("Over "+totalServed+" served");
-    }
 
-    private void countTotalServed() {
-        totalServed = 30000;
-        for (Drinker d : drinkersArrayList){
-            totalServed+=d.totalDrank;
-        }
+    private void updateTotalServed() {
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        totalServed = sharedPref.getLong("totalServed", 30000);
+
+        numServedTextView.setText("OVER "+ NumberFormat.getNumberInstance(Locale.US).format(totalServed)+" SERVED");
     }
 
 
@@ -164,7 +170,7 @@ public class MainActivity extends NfcActivity {
             }
 
         }
-        // Returning from Confirm
+        // Returning from Confirm with successful credit use
         if (requestCode == 2 && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             int position = intent.getIntExtra("drinkerPosition", -1);
@@ -173,8 +179,17 @@ public class MainActivity extends NfcActivity {
 
             totalServed++;
         }
+        // Returning from admin password check
+        if (requestCode == 3 && resultCode == RESULT_OK && intent != null) {
+            adminModeOn();
+        }
 
+        saveData();
         updateTotalServed();
+    }
+
+    private void adminModeOn() {
+        drinkersListView.setVisibility(View.VISIBLE);
     }
 
 
@@ -207,45 +222,15 @@ public class MainActivity extends NfcActivity {
     }
 
     private void checkAdminPassword() {
+        Intent intent = new Intent(getApplicationContext(),
+                PasswordActivity.class);
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-        alert.setTitle("Administrator Code");
-
-        final EditText input = new EditText(this);
-        /*input.setInputType(InputType.TYPE_NUMBER_VARIATION_PASSWORD); //Doesn't work
-        input.requestFocus();*/
-
-        alert.setView(input);
-
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String value = input.getText().toString();
-                // If password is correct, show drinkers list
-                if(value.trim().equals("0323")){
-                    drinkersListView.setVisibility(View.VISIBLE);
-                }
-                else{
-                    Toast.makeText(MainActivity.this, "Incorrect code.", Toast.LENGTH_LONG).show();
-                }
-
-            }
-        });
-
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-            }
-        });
-
-        alert.show();
-
-
+        startActivityForResult(intent, 3);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
         saveData();
     }
 
@@ -266,8 +251,13 @@ public class MainActivity extends NfcActivity {
         for(String s : msgs){
             Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
 
+            if(s.equals(NDEF_PREFIX+ADMIN_NFC_ID)) {
+                adminModeOn();
+                break;
+            }
+
             for(Drinker d : drinkersArrayList) {
-               String record = "sms:1521?body="+d.nfcId;
+               String record = NDEF_PREFIX+d.nfcId;
                 if(s.equals(record)) {
                    openConfirmActivity(drinkersArrayList.indexOf(d));
                    break;
@@ -276,11 +266,6 @@ public class MainActivity extends NfcActivity {
         }
 
     }
-
-    /*@Override
-   protected void onResume() {
-        super.onResume();
-    }*/
 
     public void addDrinker(String name, int credits, String id){
         drinkersArrayList.add(new Drinker(name, credits, id));

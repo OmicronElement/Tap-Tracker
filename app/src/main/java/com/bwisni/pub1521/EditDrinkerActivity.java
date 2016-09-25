@@ -15,7 +15,7 @@ import butterknife.OnLongClick;
 
 public class EditDrinkerActivity extends Activity {
     @Bind(R.id.editTextCredit) EditText editTextCredit;
-    @Bind(R.id.textView) TextView nameTextView;
+    @Bind(R.id.editNameTextView) TextView nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
 
 
@@ -26,6 +26,7 @@ public class EditDrinkerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_drinker);
+        setTitle("Join the Party");
 
         ButterKnife.bind(this);
 
@@ -47,6 +48,7 @@ public class EditDrinkerActivity extends Activity {
     private void refreshCreditEditText() {
         editTextCredit.setText(Integer.toString(credits));
         editTextCredit.setSelection(editTextCredit.getText().length());
+        editTextCredit.clearFocus();
     }
 
     @OnClick({R.id.okButton})
@@ -68,7 +70,7 @@ public class EditDrinkerActivity extends Activity {
 
     }
 
-    @OnLongClick({R.id.okButton})
+    @OnLongClick({R.id.editNameTextView})
     boolean delDrinker(Button b) {
 
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);

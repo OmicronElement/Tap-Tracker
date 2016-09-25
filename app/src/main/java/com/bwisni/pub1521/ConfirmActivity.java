@@ -26,6 +26,7 @@ public class ConfirmActivity extends Activity {
         setContentView(R.layout.activity_confirm);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setActionBar(toolbar);
+        setTitle("Beer Here!");
 
         ButterKnife.bind(this);
 
@@ -52,9 +53,19 @@ public class ConfirmActivity extends Activity {
     }
 
     void pourDrink(){
+        Handler handler = new Handler();
+
         if(drinker.credits == 0){
             mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
             mediaPlayer.start();
+
+            // Execute after 2 seconds have passed
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    finishActivityNoCredits();
+                }
+            }, 2000);
         }
         else {
             mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beer);
@@ -62,16 +73,17 @@ public class ConfirmActivity extends Activity {
 
             drinker.subtractCredit();
             creditsTextView.setText(Integer.toString(drinker.credits));
+
+            // Execute after 2 seconds have passed
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    finishActivity();
+                }
+            }, 2000);
         }
 
-        // Execute after 2 seconds have passed
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                finishActivity();
-            }
-        }, 2000);
+
     }
 
     private void finishActivity() {
@@ -80,6 +92,13 @@ public class ConfirmActivity extends Activity {
         intent.putExtra("drinkerPosition", position);
         intent.putExtra("drinker", drinker);
         setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    private void finishActivityNoCredits() {
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+
+        setResult(RESULT_CANCELED, intent);
         finish();
     }
 

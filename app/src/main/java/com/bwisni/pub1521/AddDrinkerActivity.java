@@ -22,6 +22,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
+    public static final String SMS_NUMBER = "1521";
     @Bind(R.id.editTextName) EditText editTextName;
 
     // Generate unique user id
@@ -34,7 +35,7 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
 
             //NdefMessage ndefMessage = new NdefMessage(uuid.getBytes());
 
-            return writeUtility.writeSmsToTagFromIntent("1521", uuid, getIntent());
+            return writeUtility.writeSmsToTagFromIntent(SMS_NUMBER, uuid, getIntent());
         }
 
     };
