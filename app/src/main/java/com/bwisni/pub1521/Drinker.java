@@ -30,6 +30,6 @@ public class Drinker extends SugarRecord implements Serializable {
     }
 
     public String toString(){
-        return (this.name + " : " + this.credits);
+        return (this.name + " : " + this.credits+" credits");
     }
 }

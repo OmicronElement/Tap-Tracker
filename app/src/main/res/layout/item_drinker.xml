@@ -12,7 +12,7 @@
         android:alpha="1"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
-        android:textColor="@color/colorAccent" />
+        android:textColor="@android:color/black" />
 
     <TextView
         android:layout_width="wrap_content"
