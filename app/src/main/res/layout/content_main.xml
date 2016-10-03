@@ -72,18 +72,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ListView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/drinkersListView"
-            android:layout_alignParentEnd="false"
-            android:layout_alignParentRight="false"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:alpha="100"
-            android:visibility="invisible"
-            android:layout_below="@+id/graph" />
-
         <pl.droidsonroids.gif.GifTextView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
@@ -92,10 +80,68 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true" />
 
+        <RelativeLayout
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:id="@+id/relativeLayout"
+            android:layout_alignBottom="@+id/graph">
+
+            <com.jjoe64.graphview.GraphView
+                android:layout_width="146dip"
+                android:layout_height="200dip"
+                android:id="@+id/kegGraph"
+                android:layout_centerHorizontal="true" />
+
+            <ImageView
+                android:layout_width="146dip"
+                android:layout_height="200dip"
+                android:id="@+id/imageView"
+                android:src="@drawable/keg2"
+                android:visibility="visible"
+                android:layout_alignEnd="@+id/kegGraph"
+                android:layout_alignStart="@+id/kegGraph" />
+
+        </RelativeLayout>
+
         <com.jjoe64.graphview.GraphView
             android:layout_width="match_parent"
             android:layout_height="200dip"
-            android:id="@+id/graph" />
+            android:id="@+id/graph"
+            android:layout_toEndOf="@+id/relativeLayout" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/AdminLayout"
+            android:background="@android:color/background_dark"
+            android:visibility="invisible">
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:text="ADMIN MODE ACTIVE"
+                android:id="@+id/adminModeTextView"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentEnd="true"
+                android:gravity="center_horizontal"
+                android:textSize="@dimen/abc_text_size_display_3_material"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="visible"
+                android:layout_alignParentTop="true" />
+
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/drinkersListView"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentRight="false"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:alpha="100"
+                android:visibility="visible"
+                android:layout_below="@+id/adminModeTextView" />
+        </RelativeLayout>
 
     </RelativeLayout>
 

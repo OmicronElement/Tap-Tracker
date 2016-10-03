@@ -32,4 +32,38 @@ public class Drinker extends SugarRecord implements Serializable {
     public String toString(){
         return (this.name + " : " + this.credits+" credits");
     }
+
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public void setCredits(int credits) {
+        this.credits = credits;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNfcId() {
+        return nfcId;
+    }
+
+    public void setNfcId(String nfcId) {
+        this.nfcId = nfcId;
+    }
+
+    public int getTotalDrank() {
+        return totalDrank;
+    }
+
+    public void setTotalDrank(int totalDrank) {
+        this.totalDrank = totalDrank;
+    }
+
 }

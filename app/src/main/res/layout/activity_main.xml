@@ -31,6 +31,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:src="@android:drawable/ic_input_add"
         android:tint="@android:color/black"
-        app:backgroundTint="@color/colorAccent" />
+        app:backgroundTint="@color/colorAccent"
+        android:visibility="invisible" />
 
 </android.support.design.widget.CoordinatorLayout>
