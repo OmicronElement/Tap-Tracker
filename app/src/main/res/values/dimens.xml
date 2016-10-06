@@ -5,4 +5,5 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="dialoguePad">65dp</dimen>
     <dimen name="snackbar_textsize">20dp</dimen>
+    <dimen name="graphsLayoutHeight">235dp</dimen>
 </resources>

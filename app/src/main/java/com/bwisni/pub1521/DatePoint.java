@@ -9,7 +9,7 @@ import com.orm.SugarRecord;
  */
 public class DatePoint extends SugarRecord{
     long date;
-    int drinks;
+    int pours;
 
     public DatePoint(){
 
@@ -17,10 +17,10 @@ public class DatePoint extends SugarRecord{
 
     public DatePoint(long x, int y) {
         date = x;
-        drinks = y;
+        pours = y;
     }
 
     public void addDrink() {
-        drinks++;
+        pours++;
     }
 }

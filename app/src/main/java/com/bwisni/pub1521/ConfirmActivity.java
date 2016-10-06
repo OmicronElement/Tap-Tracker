@@ -72,13 +72,13 @@ public class ConfirmActivity extends NfcActivity {
         creditsTextView.setText(Integer.toString(drinker.credits));
 
         if(adminMode){
-            // Execute after 1 second has passed
+            // Execute after .5 seconds
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                    addCredits();
                 }
-            }, 1000);
+            }, 500);
         }
         else {
             // Execute after 1 second has passed
@@ -99,13 +99,13 @@ public class ConfirmActivity extends NfcActivity {
         creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_top);
         creditsTextView.setText(Integer.toString(drinker.credits));
 
-        // Execute after 2 seconds have passed
+        // Execute after 1 second
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 finishActivity();
             }
-        }, 2000);
+        }, 1000);
 
     }
 

@@ -17,10 +17,12 @@
         android:layout_height="wrap_content"
         android:text="New Text"
         android:id="@+id/drinkerConfirmName"
+        android:textAppearance="?android:attr/textAppearanceLarge"
         android:textSize="@dimen/abc_text_size_display_3_material"
         android:alpha="1"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
+
 
     <TextSwitcher
         android:layout_width="wrap_content"

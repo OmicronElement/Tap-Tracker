@@ -46,7 +46,6 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
 
         ButterKnife.bind(this);
 
-        editTextName.setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
         editTextName.requestFocus();
     }
 

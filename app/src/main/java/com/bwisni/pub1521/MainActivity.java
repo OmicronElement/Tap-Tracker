@@ -12,33 +12,50 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.Toolbar;
 import android.widget.ViewSwitcher;
 
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
-import com.jjoe64.graphview.series.BarGraphSeries;
-import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 import com.orm.SugarContext;
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnItemLongClick;
+import butterknife.OnLongClick;
+import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
+import lecho.lib.hellocharts.model.Axis;
+import lecho.lib.hellocharts.model.AxisValue;
+import lecho.lib.hellocharts.model.Column;
+import lecho.lib.hellocharts.model.ColumnChartData;
+import lecho.lib.hellocharts.model.ComboLineColumnChartData;
+import lecho.lib.hellocharts.model.Line;
+import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PieChartData;
+import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.model.SliceValue;
+import lecho.lib.hellocharts.model.SubcolumnValue;
+import lecho.lib.hellocharts.view.ColumnChartView;
+import lecho.lib.hellocharts.view.ComboLineColumnChartView;
+import lecho.lib.hellocharts.view.PieChartView;
 
 
 public class MainActivity extends NfcActivity {
@@ -50,21 +67,31 @@ public class MainActivity extends NfcActivity {
     public static final int ADMIN_REQ_CODE = 3;
     public static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     public static final int BEERS_IN_KEG = 165;
+    public static final int KEG_LOW_VALUE = 25;
+    public static final int KEG_BG_COLOR = Color.parseColor("#212121");
+    public static final int KEG_COLOR = Color.parseColor("#707070");
+    private static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
+
+    private static int mAccentColor;
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
     @Bind(R.id.numServedTextView) TextSwitcher numServedTextSwitcher;
     @Bind(R.id.AdminLayout) RelativeLayout adminLayout;
-    @Bind(R.id.graph) GraphView graph;
-    @Bind(R.id.kegGraph) GraphView kegGraph;
+    @Bind(R.id.graph) ComboLineColumnChartView graph;
+    @Bind(R.id.kegGraph) ColumnChartView kegGraph;
+    @Bind(R.id.pieChart) PieChartView pieChart;
 
     @Bind(R.id.fab) FloatingActionButton fab;
 
-    ArrayList<Drinker> drinkersArrayList = new ArrayList<>();//TODO: migrate to only db queries
+    ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
     private long totalServed;
     private int kegCounter;
     private boolean adminMode = false;
-    private BarGraphSeries<DataPoint> barSeries;
-    private LineGraphSeries<DataPoint> lineSeries;
+    private long pieChartDate;
+    private Map<String, DailyStat> dailyStats = new HashMap<>();
+
+    private PieChartData pieChartData;
+    private int mTextColor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,20 +99,28 @@ public class MainActivity extends NfcActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setActionBar(toolbar);
+        // Keep device awake
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         ButterKnife.bind(this);
         SugarContext.init(getApplicationContext());
 
         loadData();
 
+        mAccentColor = getResources().getColor(R.color.colorAccent);
+        mTextColor = getResources().getColor(android.R.color.primary_text_dark);
+
         initTextSwitcher();
         initGraph();
         initKegGraph();
-
+        initPieChart();
     }
 
     private void initTextSwitcher() {
-        numServedTextSwitcher.setInAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_in_top);
+        numServedTextSwitcher.setInAnimation(getApplicationContext(),
+                android.support.design.R.anim.abc_slide_in_top);
+        numServedTextSwitcher.setOutAnimation(getApplicationContext(),
+                android.support.design.R.anim.abc_slide_out_bottom);
 
         numServedTextSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
 
@@ -99,7 +134,7 @@ public class MainActivity extends NfcActivity {
                 myText.setLayoutParams(params);
 
                 myText.setTextSize(56);
-                myText.setTextColor(Color.WHITE);
+                myText.setTextColor(mTextColor);
                 return myText;
             }
         });
@@ -107,85 +142,208 @@ public class MainActivity extends NfcActivity {
         numServedTextSwitcher.setCurrentText(NumberFormat.getNumberInstance(Locale.US).format(totalServed));
     }
 
-
     private void initGraph() {
-        List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date >= ?", Long.toString(getDate() - ONE_DAY_MS*4));
-        DataPoint[] dataPoints = new DataPoint[dpList.size()];
+        List<DatePoint> dpList = DatePoint.listAll(DatePoint.class);
+        ComboLineColumnChartData data = new ComboLineColumnChartData(generateColumnData(dpList), generateLineData(dpList));
+
+        List<AxisValue> axisValues = new ArrayList<>();
+        List<PointValue> yValues = new ArrayList<>();
+        int x = 0;
+        for (DatePoint dp : dpList) {
+            String dateString = getDateString(dp.date);
+            int yValue = dp.pours;
+            yValues.add(new PointValue(x, yValue));
+            AxisValue axisValue = new AxisValue(x);
+            axisValue.setLabel(dateString);
+            axisValues.add(axisValue);
+            x++;
+        }
+
+        Axis axisX = new Axis(axisValues);
+        Axis axisY = new Axis().setHasLines(true);
+        //axisY.setName("Pours");
+
+
+        data.setAxisXBottom(axisX);
+        data.setAxisYLeft(axisY);
+        data.setValueLabelTextSize(25);
+
+        graph.setScrollEnabled(true);
+        graph.setComboLineColumnChartData(new ComboLineColumnChartData());
+        graph.setComboLineColumnChartData(data);
+        graph.setValueTouchEnabled(true);
+/*        graph.setOnValueTouchListener(new ComboLineColumnChartOnValueSelectListener() {
+            @Override
+            public void onColumnValueSelected(int columnIndex, int subcolumnIndex, SubcolumnValue value) {
+                String s = String.valueOf((int) value.getValue()) +" pours";
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPointValueSelected(int lineIndex, int pointIndex, PointValue value) {
+                String s = String.valueOf((int) value.getY()) +" pours";
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onValueDeselected() {
+
+            }
+        });*/
+        graph.startDataAnimation();
+    }
+
+    private List<PointValue> getGraphData(List<DatePoint> dpList) {
+        List<PointValue> values = new ArrayList<>();
         int i = 0;
-        for(DatePoint dp : dpList){
-            dataPoints[i] = new DataPoint(new Date(dp.date), dp.drinks);
+        for (DatePoint dp : dpList) {
+            values.add(new PointValue(i, dp.pours));
             i++;
         }
 
-        graph.removeAllSeries();
-
-        //set manual x bounds to have nice steps
-        graph.getViewport().setMinX(getDate() - ONE_DAY_MS*4);
-        graph.getViewport().setMaxX(getDate());
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinY(0);
-        graph.getViewport().setMaxY(40);
-        graph.getViewport().setYAxisBoundsManual(true);
-
-
-        lineSeries = new LineGraphSeries<DataPoint>(dataPoints);
-        barSeries = new BarGraphSeries<DataPoint>(dataPoints);
-
-
-        lineSeries.setColor(Color.WHITE);
-        lineSeries.setAnimated(true);
-        lineSeries.setDrawDataPoints(true);
-        lineSeries.setDataPointsRadius(5);
-
-        barSeries.setAnimated(true);
-        barSeries.setSpacing(40);
-
-        graph.addSeries(barSeries);
-        graph.addSeries(lineSeries);
-
-        // set date label formatter
-        graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this));
-        //graph.getGridLabelRenderer().setNumHorizontalLabels(3); // only 4 because of the space
-
-        // as we use dates as labels, the human rounding to nice readable numbers
-        // is not necessary
-        graph.getGridLabelRenderer().setHumanRounding(false);
+        return values;
     }
 
-    private void initKegGraph(){
-        DataPoint dp[] = new DataPoint[] {new DataPoint(1, kegCounter)};
+    private ColumnChartData generateColumnData(List<DatePoint> dpList) {
+        ArrayList<Column> columns = new ArrayList<>();
+        int i = 0 ;
+        for(PointValue pv : getGraphData(dpList)){
+            ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
+            SubcolumnValue sc =  new SubcolumnValue(pv.getY());
+            sc.setColor(mAccentColor);
+            subcolumnValues.add(0, sc);
 
-        kegGraph.removeAllSeries();
+            Column c = new Column(subcolumnValues);
+            c.setHasLabelsOnlyForSelected(true);
+            columns.add(c);
+            i++;
+        }
 
-        BarGraphSeries<DataPoint> kegSeries = new BarGraphSeries<DataPoint>(dp);
+        ColumnChartData columnChartData = new ColumnChartData(columns);
+        return columnChartData;
+    }
 
-        kegSeries.setValuesOnTopSize(50);
-        kegSeries.setValuesOnTopColor(Color.WHITE);
-        kegSeries.setValueDependentColor(new KegLevelColor());
+    private LineChartData generateLineData(List<DatePoint> dpList) {
+        Line line = new Line(getGraphData(dpList));
+        line.setColor(Color.WHITE);
+        line.setCubic(true);
+        line.setHasLabels(false);
+        line.setHasLines(true);
+        line.setHasPoints(true);
 
-        // Only display values when they can be seen under keg border
-        if(kegCounter <= BEERS_IN_KEG - 30)
-            kegSeries.setDrawValuesOnTop(true);
-        else
-            kegSeries.setDrawValuesOnTop(false);
+        List<Line> lines = new ArrayList<Line>();
+        lines.add(line);
 
-        kegGraph.getViewport().setMinY(0);
-        kegGraph.getViewport().setMaxY(BEERS_IN_KEG);
-        kegGraph.getViewport().setYAxisBoundsManual(true);
-        kegGraph.getViewport().setMinX(0);
-        kegGraph.getViewport().setMaxX(2);
-        kegGraph.getViewport().setXAxisBoundsManual(true);
-        kegGraph.getViewport().setDrawBorder(false);
-        kegGraph.getViewport().setBackgroundColor(Color.parseColor("#212121"));
+        LineChartData lineChartData = new LineChartData(lines);
 
-        kegGraph.getGridLabelRenderer().setNumHorizontalLabels(0);
-        kegGraph.getGridLabelRenderer().setNumVerticalLabels(0);
-        kegGraph.getGridLabelRenderer().setPadding(0);
-        kegGraph.getGridLabelRenderer().setHighlightZeroLines(false);
-        kegGraph.getGridLabelRenderer().setVerticalLabelsVisible(false);
-        kegGraph.getGridLabelRenderer().setHorizontalLabelsVisible(false);
+        return lineChartData;
+    }
+    private void updateGraph() {
+       initGraph();
+    }
 
-        kegGraph.addSeries(kegSeries);
+    private void initKegGraph() {
+        kegGraph.setZoomEnabled(false);
+        kegGraph.setBackgroundColor(KEG_BG_COLOR);
+
+        kegGraph.setColumnChartData(generateKegData());
+    }
+
+    private void updateKegGraph() {
+        initKegGraph();
+    }
+
+    private ColumnChartData generateKegData() {
+        ArrayList<Column> columns = new ArrayList<>();
+
+        ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
+        SubcolumnValue sc =  new SubcolumnValue(kegCounter);
+        //Add another subcolumn to bring max Y to BEERS_IN_KEG
+        SubcolumnValue bg =  new SubcolumnValue(BEERS_IN_KEG - kegCounter);
+
+        if(kegCounter < BEERS_IN_KEG/2){
+            bg.setLabel(String.valueOf(kegCounter));
+            sc.setLabel("");
+        }
+        else{
+            sc.setLabel(String.valueOf(kegCounter));
+            bg.setLabel("");
+        }
+
+        bg.setColor(KEG_BG_COLOR);
+
+        if(kegCounter > KEG_LOW_VALUE) {
+            sc.setColor(KEG_COLOR);
+        }
+        else {
+            sc.setColor(KEG_LOW_COLOR);
+        }
+
+        subcolumnValues.add(0, sc);
+        subcolumnValues.add(1, bg);
+
+        Column c = new Column(subcolumnValues);
+        c.setHasLabels(true);
+        columns.add(c);
+
+        ColumnChartData columnChartData = new ColumnChartData(columns);
+        columnChartData.setFillRatio(1);
+        columnChartData.setStacked(true);
+        columnChartData.setValueLabelTextSize(56);
+        columnChartData.setValueLabelBackgroundEnabled(false);
+
+        return columnChartData;
+    }
+
+    private void initPieChart(){
+        pieChartData = new PieChartData(getPieChartData());
+
+        pieChartData.setHasLabels(true);
+        pieChartData.setHasLabelsOnlyForSelected(false);
+        pieChartData.setHasLabelsOutside(false);
+        pieChartData.setHasCenterCircle(true);
+        pieChartData.setCenterCircleScale(0.375f);
+        pieChartData.setCenterText1("Today's");
+        pieChartData.setCenterText1FontSize(13);
+        pieChartData.setCenterText1Color(Color.WHITE);
+        pieChartData.setCenterText2("Pours");
+        pieChartData.setCenterText2FontSize(13);
+        pieChartData.setCenterText2Color(Color.WHITE);
+
+        pieChart.setValueTouchEnabled(true);
+        pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
+            @Override
+            public void onValueSelected(int arcIndex, SliceValue value) {
+                String s = String.valueOf(value.getLabelAsChars()) +": "
+                        + String.valueOf((int) value.getValue()) +" pours";
+                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onValueDeselected() {
+
+            }
+        });
+
+        pieChart.setPieChartData(pieChartData);
+    }
+
+    private void updatePieChart(){
+        pieChartData.setValues(getPieChartData());
+        pieChart.startDataAnimation();
+    }
+
+    private List<SliceValue> getPieChartData() {
+        List<SliceValue> values = new ArrayList<SliceValue>();
+
+        for(String key : dailyStats.keySet()){
+            DailyStat ds = dailyStats.get(key);
+            SliceValue sv = new SliceValue(ds.getNumPours(), KEG_COLOR);
+            sv.setLabel(ds.getName());
+            values.add(sv);
+        }
+
+        return values;
     }
 
     private void loadData() {
@@ -203,7 +361,6 @@ public class MainActivity extends NfcActivity {
         kegCounter = sharedPref.getInt("kegCounter", BEERS_IN_KEG - 1);
 
         Log.d("KC",Integer.toString(kegCounter));
-        updateTotalServed();
     }
 
     private void saveData() {
@@ -222,6 +379,125 @@ public class MainActivity extends NfcActivity {
     private void printUsers(){
         for(Drinker d : drinkersArrayList)
             Log.d("ARRAY",d.toString());
+    }
+
+    private void increaseTotalServed() {
+        totalServed++;
+
+        if(kegCounter > 0)
+            kegCounter--;
+
+        List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
+
+        DatePoint dp;
+        try {
+            dp = dpList.get(0);
+            dp.addDrink();
+        }
+        catch (IndexOutOfBoundsException e){
+            dp = new DatePoint(getDate(), 1);
+        }
+
+        dp.save();
+
+        updateGraph();
+        updateKegGraph();
+        updateTotalServed();
+    }
+
+    private void updateTotalServed() {
+        // Execute after 1 second has passed
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                numServedTextSwitcher.setText(NumberFormat.getNumberInstance(Locale.US).format(totalServed));
+            }
+        }, 500);
+    }
+
+    private void increaseDailyStat(String nfcId, String name){
+        if(pieChartDate < getDate()){
+            pieChartDate = getDate();
+            dailyStats = new HashMap<>();
+        }
+        if(dailyStats.containsKey(nfcId)){
+            DailyStat ds = dailyStats.get(nfcId);
+            ds.setNumPours(ds.getNumPours()+1);
+        }
+        else
+            dailyStats.put(nfcId, new DailyStat(name, 1));
+
+        updatePieChart();
+    }
+
+    private void openConfirmActivity(int position) {
+        Intent intent = new Intent(getApplicationContext(),
+                ConfirmActivity.class);
+
+        intent.putExtra("drinker", drinkersArrayList.get(position));
+        intent.putExtra("drinkerPosition", position);
+        intent.putExtra("adminMode", adminMode);
+
+        startActivityForResult(intent, CONFIRM_REQ_CODE);
+    }
+
+
+    private void toggleAdminMode() {
+        if(adminMode) {
+            adminMode = false;
+            slideToBottom(adminLayout);
+            fab.setVisibility(View.GONE);
+        }
+        else{
+            adminMode = true;
+            fab.setVisibility(View.VISIBLE);
+            slideToTop(adminLayout);
+        }
+    }
+
+    // View animation functions
+    // Thanks to pvllnspk on StackOverflow
+    public static void slideToBottom(View view){
+        TranslateAnimation animate = new TranslateAnimation(0,0,0,view.getHeight());
+        animate.setDuration(500);
+        view.startAnimation(animate);
+        view.setVisibility(View.GONE);
+    }
+
+    public static void slideToTop(View view){
+        TranslateAnimation animate = new TranslateAnimation(0,0,view.getHeight(),0);
+        animate.setDuration(500);
+        view.startAnimation(animate);
+        view.setVisibility(View.VISIBLE);
+    }
+
+    public void addDrinker(String name, int credits, String id){
+        Drinker drinker = new Drinker(name, credits, id);
+        drinkersArrayList.add(drinker);
+        drinker.save();
+        drinkersListView.invalidateViews();
+    }
+
+    public void removeDrinker(int position){
+        //Remove from ArrayList and delete() sugar record
+        drinkersArrayList.remove(position).delete();
+        drinkersListView.invalidateViews();
+    }
+
+    public long getDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.HOUR, 0);
+        return calendar.getTimeInMillis();
+    }
+
+    private String getDateString(long x) {
+        Date date = new Date(x);
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        return sdf.format(date);
     }
 
     @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {
@@ -246,6 +522,17 @@ public class MainActivity extends NfcActivity {
                 AddDrinkerActivity.class);
 
         startActivityForResult(intent, ADD_REQ_CODE);
+    }
+
+    @OnClick(R.id.adminExitButton) public void onAdminExitClick(View view) {
+        toggleAdminMode();
+    }
+
+    @OnLongClick(R.id.adminResetButton) public  boolean onAdminResetClick(View view) {
+        kegCounter = BEERS_IN_KEG - 1;
+        updateKegGraph();
+        Toast.makeText(this, "Keg Level Reset", Toast.LENGTH_SHORT).show();
+        return true;
     }
 
     // Returning from a dialogue
@@ -293,6 +580,7 @@ public class MainActivity extends NfcActivity {
             else {
                 drinker.subtractCredit();
                 increaseTotalServed();
+                increaseDailyStat(drinker.getNfcId(), drinker.getName());
             }
 
             drinker.save();
@@ -303,66 +591,43 @@ public class MainActivity extends NfcActivity {
         }
     }
 
-    private void increaseTotalServed() {
-        totalServed++;
+    //Called when NFC Tag has been read
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        /*for (String message : getNfcMessages()){
+            Toast.makeText(this,message,Toast.LENGTH_SHORT).show();
+        }*/
 
-        if(kegCounter > 0)
-            kegCounter--;
+        List<String> ndefMessages = getNfcMessages();
 
-        List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
+        //byte[] rawMessage = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
+        //String id = rawMessage.toString();
 
-        DatePoint dp;
-        try {
-            dp = dpList.get(0);
-            dp.addDrink();
-        }
-        catch (IndexOutOfBoundsException e){
-            dp = new DatePoint(getDate(), 1);
-        }
+        boolean newUser = true;
+        for(String m : ndefMessages){
+            //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
 
-        dp.save();
-
-        initGraph();
-        initKegGraph();
-        updateTotalServed();
-    }
-
-    private void updateTotalServed() {
-        // Execute after 1 second has passed
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                numServedTextSwitcher.setText(NumberFormat.getNumberInstance(Locale.US).format(totalServed));
+            if(m.equals(NDEF_PREFIX+ADMIN_NFC_ID)) {
+                toggleAdminMode();
+                break;
             }
-        }, 500);
-    }
-
-    private void openConfirmActivity(int position) {
-        Intent intent = new Intent(getApplicationContext(),
-                ConfirmActivity.class);
-
-        intent.putExtra("drinker", drinkersArrayList.get(position));
-        intent.putExtra("drinkerPosition", position);
-        intent.putExtra("adminMode", adminMode);
-
-        startActivityForResult(intent, CONFIRM_REQ_CODE);
-    }
 
 
-    private void toggleAdminMode() {
-        if(adminMode) {
-            adminMode = false;
-            adminLayout.setVisibility(View.INVISIBLE);
-            fab.setVisibility(View.INVISIBLE);
+            for(Drinker d : drinkersArrayList) {
+               String record = NDEF_PREFIX+d.nfcId;
+                if(m.equals(record)) {
+                    openConfirmActivity(drinkersArrayList.indexOf(d));
+                    newUser = false;
+                    break;
+                }
+            }
         }
-        else{
-            adminMode = true;
-            adminLayout.setVisibility(View.VISIBLE);
-            fab.setVisibility(View.VISIBLE);
+        // If we don't find a matching nfcId, open new user dialogue
+        if(newUser && adminMode){
+            onFabClick(getCurrentFocus());
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -405,57 +670,4 @@ public class MainActivity extends NfcActivity {
         saveData();
     }
 
-    //Called when NFC Tag has been read
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        /*for (String message : getNfcMessages()){
-            Toast.makeText(this,message,Toast.LENGTH_SHORT).show();
-        }*/
-
-        List<String> ndefMessages = getNfcMessages();
-
-        //byte[] rawMessage = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
-        //String id = rawMessage.toString();
-
-
-        for(String m : ndefMessages){
-            //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-
-            if(m.equals(NDEF_PREFIX+ADMIN_NFC_ID)) {
-                toggleAdminMode();
-                break;
-            }
-
-            for(Drinker d : drinkersArrayList) {
-               String record = NDEF_PREFIX+d.nfcId;
-                if(m.equals(record)) {
-                    openConfirmActivity(drinkersArrayList.indexOf(d));
-                    break;
-                }
-            }
-        }
-    }
-
-    public void addDrinker(String name, int credits, String id){
-        Drinker drinker = new Drinker(name, credits, id);
-        drinkersArrayList.add(drinker);
-        drinker.save();
-        drinkersListView.invalidateViews();
-    }
-
-    public void removeDrinker(int position){
-        //Remove from ArrayList and delete() sugar record
-        drinkersArrayList.remove(position).delete();
-        drinkersListView.invalidateViews();
-    }
-
-    public long getDate() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.HOUR, 12);
-        return calendar.getTimeInMillis();
-    }
 }

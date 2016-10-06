@@ -36,14 +36,14 @@
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
                 android:layout_toEndOf="@+id/editNameTextView"
-                android:inputType="textPersonName" />
+                android:inputType="textCapWords" />
 
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Scan your card to confirm"
+            android:text="Scan NFC card to confirm"
             android:id="@+id/textView4"
             android:layout_alignParentStart="true"
             android:textAppearance="?android:attr/textAppearanceMedium"

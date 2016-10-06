@@ -10,9 +10,9 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.bwisni.pub1521.MainActivity"
-    tools:showIn="@layout/activity_main"
     android:background="@color/background_material_dark"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:showIn="@layout/activity_main">
 
     <GridLayout
         android:layout_width="wrap_content"
@@ -76,44 +76,62 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:id="@+id/fireView"
-            android:background="@drawable/animated_fire_blue"
+            android:background="@drawable/mainactivity_background"
             android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/graphsLayoutHeight"
+            android:weightSum="1">
+
+            <RelativeLayout
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:id="@+id/relativeLayout"
+                android:layout_alignBottom="@+id/graph">
+
+                <lecho.lib.hellocharts.view.ColumnChartView
+                    android:layout_width="109.5dip"
+                    android:layout_height="150dip"
+                    android:id="@+id/kegGraph"
+                    android:layout_centerInParent="true" />
+
+                <ImageView
+                    android:layout_width="109.5dip"
+                    android:layout_height="150dip"
+                    android:id="@+id/imageView"
+                    android:src="@drawable/keg_outline"
+                    android:visibility="visible"
+                    android:layout_alignEnd="@+id/kegGraph"
+                    android:layout_alignStart="@+id/kegGraph"
+                    android:layout_centerInParent="true" />
+
+            </RelativeLayout>
+
+            <lecho.lib.hellocharts.view.ComboLineColumnChartView
+                android:layout_width="615dp"
+                android:layout_height="match_parent"
+                android:id="@+id/graph"
+                android:layout_toStartOf="@+id/pieChart" />
+
+            <lecho.lib.hellocharts.view.PieChartView
+                android:id="@+id/pieChart"
+                android:layout_width="200dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignBottom="@+id/graph" />
+
+        </LinearLayout>
 
         <RelativeLayout
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:id="@+id/relativeLayout"
-            android:layout_alignBottom="@+id/graph">
-
-            <com.jjoe64.graphview.GraphView
-                android:layout_width="146dip"
-                android:layout_height="200dip"
-                android:id="@+id/kegGraph"
-                android:layout_centerHorizontal="true" />
-
-            <ImageView
-                android:layout_width="146dip"
-                android:layout_height="200dip"
-                android:id="@+id/imageView"
-                android:src="@drawable/keg2"
-                android:visibility="visible"
-                android:layout_alignEnd="@+id/kegGraph"
-                android:layout_alignStart="@+id/kegGraph" />
-
-        </RelativeLayout>
-
-        <com.jjoe64.graphview.GraphView
-            android:layout_width="match_parent"
-            android:layout_height="200dip"
-            android:id="@+id/graph"
-            android:layout_toEndOf="@+id/relativeLayout" />
-
-        <RelativeLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/AdminLayout"
-            android:background="@android:color/background_dark"
+            android:background="@color/primary_material_dark"
             android:visibility="invisible">
 
             <TextView
@@ -129,6 +147,23 @@
                 android:textColor="@android:color/holo_red_dark"
                 android:visibility="visible"
                 android:layout_alignParentTop="true" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reset Keg"
+                android:id="@+id/adminResetButton"
+                android:layout_above="@+id/drinkersListView"
+                android:layout_alignParentTop="true" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Exit"
+                android:id="@+id/adminExitButton"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_above="@+id/drinkersListView" />
 
             <ListView
                 android:layout_width="wrap_content"

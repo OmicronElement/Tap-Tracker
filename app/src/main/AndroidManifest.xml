@@ -37,7 +37,7 @@
 
         <meta-data
             android:name="DATABASE"
-            android:value="database.db" />
+            android:value="pub1521.db" />
         <meta-data
             android:name="VERSION"
             android:value="2" />
