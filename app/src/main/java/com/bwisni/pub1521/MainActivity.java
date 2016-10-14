@@ -68,11 +68,12 @@ public class MainActivity extends NfcActivity {
     public static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     public static final int BEERS_IN_KEG = 165;
     public static final int KEG_LOW_VALUE = 25;
-    public static final int KEG_BG_COLOR = Color.parseColor("#212121");
+    public static final int KEG_BG_COLOR = Color.parseColor("#000000");
     public static final int KEG_COLOR = Color.parseColor("#707070");
     private static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
 
     private static int mAccentColor;
+    private static int mTextColor;
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
     @Bind(R.id.numServedTextView) TextSwitcher numServedTextSwitcher;
@@ -91,7 +92,6 @@ public class MainActivity extends NfcActivity {
     private Map<String, DailyStat> dailyStats = new HashMap<>();
 
     private PieChartData pieChartData;
-    private int mTextColor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,15 +144,13 @@ public class MainActivity extends NfcActivity {
 
     private void initGraph() {
         List<DatePoint> dpList = DatePoint.listAll(DatePoint.class);
-        ComboLineColumnChartData data = new ComboLineColumnChartData(generateColumnData(dpList), generateLineData(dpList));
+        ComboLineColumnChartData data = new ComboLineColumnChartData
+                (generateColumnData(dpList), generateLineData(dpList));
 
         List<AxisValue> axisValues = new ArrayList<>();
-        List<PointValue> yValues = new ArrayList<>();
         int x = 0;
         for (DatePoint dp : dpList) {
             String dateString = getDateString(dp.date);
-            int yValue = dp.pours;
-            yValues.add(new PointValue(x, yValue));
             AxisValue axisValue = new AxisValue(x);
             axisValue.setLabel(dateString);
             axisValues.add(axisValue);
@@ -171,26 +169,8 @@ public class MainActivity extends NfcActivity {
         graph.setScrollEnabled(true);
         graph.setComboLineColumnChartData(new ComboLineColumnChartData());
         graph.setComboLineColumnChartData(data);
-        graph.setValueTouchEnabled(true);
-/*        graph.setOnValueTouchListener(new ComboLineColumnChartOnValueSelectListener() {
-            @Override
-            public void onColumnValueSelected(int columnIndex, int subcolumnIndex, SubcolumnValue value) {
-                String s = String.valueOf((int) value.getValue()) +" pours";
-                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
-            }
 
-            @Override
-            public void onPointValueSelected(int lineIndex, int pointIndex, PointValue value) {
-                String s = String.valueOf((int) value.getY()) +" pours";
-                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onValueDeselected() {
-
-            }
-        });*/
-        graph.startDataAnimation();
+        slideToTop(graph);
     }
 
     private List<PointValue> getGraphData(List<DatePoint> dpList) {
@@ -206,7 +186,6 @@ public class MainActivity extends NfcActivity {
 
     private ColumnChartData generateColumnData(List<DatePoint> dpList) {
         ArrayList<Column> columns = new ArrayList<>();
-        int i = 0 ;
         for(PointValue pv : getGraphData(dpList)){
             ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
             SubcolumnValue sc =  new SubcolumnValue(pv.getY());
@@ -214,13 +193,11 @@ public class MainActivity extends NfcActivity {
             subcolumnValues.add(0, sc);
 
             Column c = new Column(subcolumnValues);
-            c.setHasLabelsOnlyForSelected(true);
+            c.setHasLabels(true);
             columns.add(c);
-            i++;
         }
 
-        ColumnChartData columnChartData = new ColumnChartData(columns);
-        return columnChartData;
+        return new ColumnChartData(columns);
     }
 
     private LineChartData generateLineData(List<DatePoint> dpList) {
@@ -231,12 +208,10 @@ public class MainActivity extends NfcActivity {
         line.setHasLines(true);
         line.setHasPoints(true);
 
-        List<Line> lines = new ArrayList<Line>();
+        List<Line> lines = new ArrayList<>();
         lines.add(line);
 
-        LineChartData lineChartData = new LineChartData(lines);
-
-        return lineChartData;
+        return new LineChartData(lines);
     }
     private void updateGraph() {
        initGraph();
@@ -334,7 +309,7 @@ public class MainActivity extends NfcActivity {
     }
 
     private List<SliceValue> getPieChartData() {
-        List<SliceValue> values = new ArrayList<SliceValue>();
+        List<SliceValue> values = new ArrayList<>();
 
         for(String key : dailyStats.keySet()){
             DailyStat ds = dailyStats.get(key);
@@ -411,7 +386,8 @@ public class MainActivity extends NfcActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                numServedTextSwitcher.setText(NumberFormat.getNumberInstance(Locale.US).format(totalServed));
+                String formatted = NumberFormat.getNumberInstance(Locale.US).format(totalServed);
+                numServedTextSwitcher.setText(formatted);
             }
         }, 500);
     }
@@ -610,7 +586,7 @@ public class MainActivity extends NfcActivity {
 
             if(m.equals(NDEF_PREFIX+ADMIN_NFC_ID)) {
                 toggleAdminMode();
-                break;
+                newUser = false;
             }
 
 
@@ -619,7 +595,6 @@ public class MainActivity extends NfcActivity {
                 if(m.equals(record)) {
                     openConfirmActivity(drinkersArrayList.indexOf(d));
                     newUser = false;
-                    break;
                 }
             }
         }
