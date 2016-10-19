@@ -28,4 +28,8 @@ public class DailyStat {
         this.name = name;
         this.numPours = numPours;
     }
+
+    public void addDrink() {
+        numPours++;
+    }
 }

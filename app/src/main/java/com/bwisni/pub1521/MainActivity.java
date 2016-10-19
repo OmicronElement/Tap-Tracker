@@ -129,7 +129,8 @@ public class MainActivity extends NfcActivity {
                 myText.setGravity(Gravity.CENTER);
 
                 FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
                         Gravity.CENTER);
                 myText.setLayoutParams(params);
 
@@ -139,7 +140,8 @@ public class MainActivity extends NfcActivity {
             }
         });
 
-        numServedTextSwitcher.setCurrentText(NumberFormat.getNumberInstance(Locale.US).format(totalServed));
+        String format = NumberFormat.getNumberInstance(Locale.US).format(totalServed);
+        numServedTextSwitcher.setCurrentText(format);
     }
 
     private void initGraph() {
@@ -165,12 +167,10 @@ public class MainActivity extends NfcActivity {
         data.setAxisXBottom(axisX);
         data.setAxisYLeft(axisY);
         data.setValueLabelTextSize(25);
+        data.setValueLabelBackgroundEnabled(false);
 
         graph.setScrollEnabled(true);
-        graph.setComboLineColumnChartData(new ComboLineColumnChartData());
         graph.setComboLineColumnChartData(data);
-
-        slideToTop(graph);
     }
 
     private List<PointValue> getGraphData(List<DatePoint> dpList) {
@@ -194,6 +194,7 @@ public class MainActivity extends NfcActivity {
 
             Column c = new Column(subcolumnValues);
             c.setHasLabels(true);
+            //c.setHasLabelsOnlyForSelected(true);
             columns.add(c);
         }
 
@@ -213,6 +214,7 @@ public class MainActivity extends NfcActivity {
 
         return new LineChartData(lines);
     }
+
     private void updateGraph() {
        initGraph();
     }
@@ -236,6 +238,8 @@ public class MainActivity extends NfcActivity {
         //Add another subcolumn to bring max Y to BEERS_IN_KEG
         SubcolumnValue bg =  new SubcolumnValue(BEERS_IN_KEG - kegCounter);
 
+
+        // Set graph color and label position based on kegCounter value
         if(kegCounter < BEERS_IN_KEG/2){
             bg.setLabel(String.valueOf(kegCounter));
             sc.setLabel("");
@@ -285,6 +289,7 @@ public class MainActivity extends NfcActivity {
         pieChartData.setCenterText2FontSize(13);
         pieChartData.setCenterText2Color(Color.WHITE);
 
+        // Create a Toast showing number of pours when users slice is touched
         pieChart.setValueTouchEnabled(true);
         pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
             @Override
@@ -311,17 +316,27 @@ public class MainActivity extends NfcActivity {
     private List<SliceValue> getPieChartData() {
         List<SliceValue> values = new ArrayList<>();
 
+        // Add a slice for each entry in dailyStats
+        int i = 0;
         for(String key : dailyStats.keySet()){
             DailyStat ds = dailyStats.get(key);
             SliceValue sv = new SliceValue(ds.getNumPours(), KEG_COLOR);
-            sv.setLabel(ds.getName());
+
+            // Display only top 5 names
+            if(i < 5)
+                sv.setLabel(ds.getName());
+            else
+                sv.setLabel("");
+
             values.add(sv);
+            i++;
         }
 
         return values;
     }
 
     private void loadData() {
+        // Populate list with drinkers saved in database
         drinkersArrayList = new ArrayList<>(Drinker.listAll(Drinker.class));
 
         printUsers();
@@ -335,10 +350,11 @@ public class MainActivity extends NfcActivity {
         totalServed = sharedPref.getLong("totalServed", 30000);
         kegCounter = sharedPref.getInt("kegCounter", BEERS_IN_KEG - 1);
 
-        Log.d("KC",Integer.toString(kegCounter));
+        Log.i("kegCounter",Integer.toString(kegCounter));
     }
 
     private void saveData() {
+        // Save each drinker in the list to the database
         for (Drinker d : drinkersArrayList){
             d.save();
         }
@@ -353,18 +369,21 @@ public class MainActivity extends NfcActivity {
 
     private void printUsers(){
         for(Drinker d : drinkersArrayList)
-            Log.d("ARRAY",d.toString());
+            Log.d("loadData",d.toString());
     }
 
     private void increaseTotalServed() {
         totalServed++;
 
+        // Reduce keg counter
         if(kegCounter > 0)
             kegCounter--;
 
+        // Search for existing DatePoint
         List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
 
         DatePoint dp;
+        // If we found a matching DatePoint in the database, update it. Otherwise add one
         try {
             dp = dpList.get(0);
             dp.addDrink();
@@ -393,13 +412,15 @@ public class MainActivity extends NfcActivity {
     }
 
     private void increaseDailyStat(String nfcId, String name){
+        // Start a new chart if it's a new day
         if(pieChartDate < getDate()){
             pieChartDate = getDate();
             dailyStats = new HashMap<>();
         }
+
         if(dailyStats.containsKey(nfcId)){
             DailyStat ds = dailyStats.get(nfcId);
-            ds.setNumPours(ds.getNumPours()+1);
+            ds.addDrink();
         }
         else
             dailyStats.put(nfcId, new DailyStat(name, 1));
@@ -461,6 +482,7 @@ public class MainActivity extends NfcActivity {
         drinkersListView.invalidateViews();
     }
 
+    // Returns date in ms
     public long getDate() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.MILLISECOND, 0);
@@ -571,26 +593,18 @@ public class MainActivity extends NfcActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        /*for (String message : getNfcMessages()){
-            Toast.makeText(this,message,Toast.LENGTH_SHORT).show();
-        }*/
 
         List<String> ndefMessages = getNfcMessages();
 
-        //byte[] rawMessage = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID);
-        //String id = rawMessage.toString();
-
         boolean newUser = true;
         for(String m : ndefMessages){
-            //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-
+            // Check if admin card
             if(m.equals(NDEF_PREFIX+ADMIN_NFC_ID)) {
                 toggleAdminMode();
                 newUser = false;
             }
-
-
-            for(Drinker d : drinkersArrayList) {
+            // Otherwise search for matching drinker
+            else for(Drinker d : drinkersArrayList) {
                String record = NDEF_PREFIX+d.nfcId;
                 if(m.equals(record)) {
                     openConfirmActivity(drinkersArrayList.indexOf(d));
