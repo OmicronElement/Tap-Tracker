@@ -53,6 +53,7 @@ import lecho.lib.hellocharts.model.PieChartData;
 import lecho.lib.hellocharts.model.PointValue;
 import lecho.lib.hellocharts.model.SliceValue;
 import lecho.lib.hellocharts.model.SubcolumnValue;
+import lecho.lib.hellocharts.model.Viewport;
 import lecho.lib.hellocharts.view.ColumnChartView;
 import lecho.lib.hellocharts.view.ComboLineColumnChartView;
 import lecho.lib.hellocharts.view.PieChartView;
@@ -169,8 +170,13 @@ public class MainActivity extends NfcActivity {
         data.setValueLabelTextSize(25);
         data.setValueLabelBackgroundEnabled(false);
 
-        graph.setScrollEnabled(true);
         graph.setComboLineColumnChartData(data);
+
+        // Set viewport to last 7 days
+        graph.setHorizontalScrollBarEnabled(true);
+        Viewport v = new Viewport(graph.getMaximumViewport());
+        v.left = v.right - 7;
+        graph.setCurrentViewport(v);
     }
 
     private List<PointValue> getGraphData(List<DatePoint> dpList) {
@@ -339,6 +345,18 @@ public class MainActivity extends NfcActivity {
         // Populate list with drinkers saved in database
         drinkersArrayList = new ArrayList<>(Drinker.listAll(Drinker.class));
 
+        // Search for existing DatePoint
+        List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
+        DatePoint dp;
+        // If no DatePoint for today, add one
+        try {
+            dp = dpList.get(0);
+        }
+        catch (IndexOutOfBoundsException e){
+            dp = new DatePoint(getDate(), 0);
+        }
+        dp.save();
+
         printUsers();
 
         DrinkerAdapter listAdapter = new DrinkerAdapter(this, drinkersArrayList);
@@ -379,19 +397,10 @@ public class MainActivity extends NfcActivity {
         if(kegCounter > 0)
             kegCounter--;
 
-        // Search for existing DatePoint
+        // Find DatePoint for today and increment
         List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
-
-        DatePoint dp;
-        // If we found a matching DatePoint in the database, update it. Otherwise add one
-        try {
-            dp = dpList.get(0);
-            dp.addDrink();
-        }
-        catch (IndexOutOfBoundsException e){
-            dp = new DatePoint(getDate(), 1);
-        }
-
+        DatePoint dp = dpList.get(0);
+        dp.addDrink();
         dp.save();
 
         updateGraph();
@@ -494,7 +503,7 @@ public class MainActivity extends NfcActivity {
 
     private String getDateString(long x) {
         Date date = new Date(x);
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy", Locale.US);
         return sdf.format(date);
     }
 
