@@ -22,8 +22,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/linearLayout">
 
-        <TextView
-            android:layout_width="match_parent"
+        <EditText
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Name"
             android:id="@+id/editNameTextView"
@@ -33,7 +33,8 @@
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
             android:textSize="@dimen/abc_text_size_display_1_material"
-            android:clickable="true" />
+            android:clickable="true"
+            android:selectAllOnFocus="false" />
 
         <TextView
             android:layout_width="wrap_content"

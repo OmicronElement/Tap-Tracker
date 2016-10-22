@@ -109,6 +109,20 @@
                     android:layout_alignStart="@+id/kegGraph"
                     android:layout_centerInParent="true" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:text="Large Text"
+                    android:id="@+id/kegTextView"
+                    android:layout_alignParentStart="false"
+                    android:layout_alignStart="@+id/imageView"
+                    android:layout_alignEnd="@+id/kegGraph"
+                    android:layout_alignTop="@+id/kegGraph"
+                    android:layout_alignBottom="@+id/kegGraph"
+                    android:textSize="@dimen/abc_text_size_display_3_material"
+                    android:textAlignment="center" />
+
             </RelativeLayout>
 
             <lecho.lib.hellocharts.view.ComboLineColumnChartView
@@ -138,14 +152,13 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:text="ADMIN MODE ACTIVE"
+                android:text="ADMIN MODE"
                 android:id="@+id/adminModeTextView"
                 android:layout_alignParentStart="false"
                 android:layout_alignParentEnd="true"
                 android:gravity="center_horizontal"
                 android:textSize="@dimen/abc_text_size_display_3_material"
                 android:textColor="@android:color/holo_red_dark"
-                android:visibility="visible"
                 android:layout_alignParentTop="true" />
 
             <Button
@@ -172,10 +185,25 @@
                 android:layout_alignParentEnd="false"
                 android:layout_alignParentRight="false"
                 android:layout_alignParentBottom="true"
-                android:layout_alignParentStart="true"
                 android:alpha="100"
                 android:visibility="visible"
-                android:layout_below="@+id/adminModeTextView" />
+                android:layout_below="@+id/adminModeTextView"
+                android:layout_alignParentStart="true" />
+
+            <EditText
+                android:layout_width="@dimen/dialoguePad"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:ems="10"
+                android:id="@+id/kegEditText"
+                android:layout_above="@+id/drinkersListView"
+                android:layout_toEndOf="@+id/adminResetButton"
+                android:text="164"
+                android:textAlignment="center"
+                android:textSize="@dimen/abc_text_size_display_1_material"
+                android:theme="@style/AppTheme"
+                android:selectAllOnFocus="true" />
+
         </RelativeLayout>
 
     </RelativeLayout>

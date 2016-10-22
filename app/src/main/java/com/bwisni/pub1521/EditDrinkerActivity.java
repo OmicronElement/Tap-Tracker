@@ -16,12 +16,12 @@ import butterknife.OnLongClick;
 
 public class EditDrinkerActivity extends Activity {
     @Bind(R.id.editTextCredit) EditText editTextCredit;
-    @Bind(R.id.editNameTextView) TextView nameTextView;
+    @Bind(R.id.editNameTextView) EditText nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
 
-
-    int position;
-    int credits;
+    private int position;
+    private int credits;
+    private String name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +37,7 @@ public class EditDrinkerActivity extends Activity {
 
         position = intent.getIntExtra("drinkerPosition", -1);
         credits = drinker.credits;
-        String name = drinker.name;
+        name = drinker.name;
         String nfcId = drinker.nfcId;
 
         nameTextView.setText(name);
@@ -63,24 +63,23 @@ public class EditDrinkerActivity extends Activity {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
         intent.putExtra("drinkerPosition", position);
+        intent.putExtra("name", nameTextView.getText().toString());
         intent.putExtra("drinkerCredits", credits);
-        intent.putExtra("delete", false);
 
         setResult(RESULT_OK, intent);
         finish();
 
     }
 
-    @OnLongClick({R.id.editNameTextView})
+    @OnLongClick({R.id.nfcIdtextView})
     boolean delDrinker(View v) {
 
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
         intent.putExtra("drinkerPosition", position);
         intent.putExtra("drinkerCredits", credits);
-        intent.putExtra("delete", true);
 
-        setResult(RESULT_OK, intent);
+        setResult(RESULT_CANCELED, intent);
         finish();
 
         return true;

@@ -7,7 +7,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.bwisni.pub1521.AddDrinkerActivity">
+    tools:context="com.bwisni.pub1521.AddDrinkerActivity"
+    android:theme="@style/AppTheme">
 
     <LinearLayout
         android:orientation="vertical"

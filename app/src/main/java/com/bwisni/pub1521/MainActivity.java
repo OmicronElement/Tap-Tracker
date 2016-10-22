@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -61,23 +62,27 @@ import lecho.lib.hellocharts.view.PieChartView;
 
 public class MainActivity extends NfcActivity {
     public static final String NDEF_PREFIX = "sms:"+AddDrinkerActivity.SMS_NUMBER+"?body=";
-    public static final String ADMIN_NFC_ID = "664de4d0-0586-40aa-9518-a854d2657982";
-    public static final int ADD_REQ_CODE = 0;
-    public static final int EDIT_REQ_CODE = 1;
-    public static final int CONFIRM_REQ_CODE = 2;
-    public static final int ADMIN_REQ_CODE = 3;
+    private static final String ADMIN_NFC_ID = "664de4d0-0586-40aa-9518-a854d2657982";
+    private static final int ADD_REQ_CODE = 0;
+    private static final int EDIT_REQ_CODE = 1;
+    private static final int CONFIRM_REQ_CODE = 2;
+    private static final int ADMIN_REQ_CODE = 3;
+    public static final int RESULT_DELETE = -1;
     public static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     public static final int BEERS_IN_KEG = 165;
     public static final int KEG_LOW_VALUE = 25;
-    public static final int KEG_BG_COLOR = Color.parseColor("#000000");
-    public static final int KEG_COLOR = Color.parseColor("#707070");
+    private static final int KEG_BG_COLOR = Color.parseColor("#000000");
+    private static final int KEG_COLOR = Color.parseColor("#707070");
     private static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
+
 
     private static int mAccentColor;
     private static int mTextColor;
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
     @Bind(R.id.numServedTextView) TextSwitcher numServedTextSwitcher;
+    @Bind(R.id.kegTextView) TextView kegTextView;
+    @Bind(R.id.kegEditText) EditText kegEditText;
     @Bind(R.id.AdminLayout) RelativeLayout adminLayout;
     @Bind(R.id.graph) ComboLineColumnChartView graph;
     @Bind(R.id.kegGraph) ColumnChartView kegGraph;
@@ -110,6 +115,8 @@ public class MainActivity extends NfcActivity {
 
         mAccentColor = getResources().getColor(R.color.colorAccent);
         mTextColor = getResources().getColor(android.R.color.primary_text_dark);
+
+        kegEditText.setText(String.valueOf(BEERS_IN_KEG - 1));
 
         initTextSwitcher();
         initGraph();
@@ -167,7 +174,7 @@ public class MainActivity extends NfcActivity {
 
         data.setAxisXBottom(axisX);
         data.setAxisYLeft(axisY);
-        data.setValueLabelTextSize(25);
+        data.setValueLabelTextSize(20);
         data.setValueLabelBackgroundEnabled(false);
 
         graph.setComboLineColumnChartData(data);
@@ -176,6 +183,7 @@ public class MainActivity extends NfcActivity {
         graph.setHorizontalScrollBarEnabled(true);
         Viewport v = new Viewport(graph.getMaximumViewport());
         v.left = v.right - 7;
+        v.top = 50;
         graph.setCurrentViewport(v);
     }
 
@@ -238,6 +246,7 @@ public class MainActivity extends NfcActivity {
 
     private ColumnChartData generateKegData() {
         ArrayList<Column> columns = new ArrayList<>();
+        ColumnChartData columnChartData = new ColumnChartData();
 
         ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
         SubcolumnValue sc =  new SubcolumnValue(kegCounter);
@@ -245,15 +254,23 @@ public class MainActivity extends NfcActivity {
         SubcolumnValue bg =  new SubcolumnValue(BEERS_IN_KEG - kegCounter);
 
 
+        columnChartData.setValueLabelBackgroundAuto(false);
+
+/*
         // Set graph color and label position based on kegCounter value
         if(kegCounter < BEERS_IN_KEG/2){
             bg.setLabel(String.valueOf(kegCounter));
             sc.setLabel("");
+            columnChartData.setValueLabelBackgroundColor(KEG_BG_COLOR);
         }
         else{
             sc.setLabel(String.valueOf(kegCounter));
             bg.setLabel("");
+            columnChartData.setValueLabelBackgroundColor(KEG_COLOR);
         }
+*/
+
+        kegTextView.setText(String.valueOf(kegCounter));
 
         bg.setColor(KEG_BG_COLOR);
 
@@ -268,14 +285,12 @@ public class MainActivity extends NfcActivity {
         subcolumnValues.add(1, bg);
 
         Column c = new Column(subcolumnValues);
-        c.setHasLabels(true);
+        c.setHasLabels(false);
         columns.add(c);
 
-        ColumnChartData columnChartData = new ColumnChartData(columns);
+        columnChartData.setColumns(columns);
         columnChartData.setFillRatio(1);
         columnChartData.setStacked(true);
-        columnChartData.setValueLabelTextSize(56);
-        columnChartData.setValueLabelBackgroundEnabled(false);
 
         return columnChartData;
     }
@@ -536,7 +551,13 @@ public class MainActivity extends NfcActivity {
     }
 
     @OnLongClick(R.id.adminResetButton) public  boolean onAdminResetClick(View view) {
-        kegCounter = BEERS_IN_KEG - 1;
+        int newValue = Integer.parseInt(kegEditText.getText().toString());
+
+        if(newValue <= BEERS_IN_KEG && newValue >= 0)
+            kegCounter = newValue;
+        else
+            kegCounter = BEERS_IN_KEG;
+
         updateKegGraph();
         Toast.makeText(this, "Keg Level Reset", Toast.LENGTH_SHORT).show();
         return true;
@@ -560,19 +581,21 @@ public class MainActivity extends NfcActivity {
         if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             int credits = intent.getIntExtra("drinkerCredits", 0);
+            String name = intent.getStringExtra("name");
             int position = intent.getIntExtra("drinkerPosition", -1);
 
-            boolean delete = intent.getBooleanExtra("delete", false);
+            Drinker drinker = drinkersArrayList.get(position);
+            drinker.setName(name);
+            drinker.setCredits(credits);
+            drinker.save();
 
-            if(delete){
-                removeDrinker(position);
-            }
-            else{
-                Drinker drinker = drinkersArrayList.get(position);
-                drinker.credits = credits;
-                drinker.save();
-            }
-
+            // Invalidate views in case name was changed
+            drinkersListView.invalidateViews();
+        }
+        // Returning from Edit Drinker - Delete Drinker
+        if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_CANCELED && intent != null){
+            int position = intent.getIntExtra("drinkerPosition", -1);
+            removeDrinker(position);
         }
         // Returning from Confirm with successful credit use/increase
         if (requestCode == CONFIRM_REQ_CODE && resultCode == RESULT_OK && intent != null) {
