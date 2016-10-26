@@ -3,8 +3,10 @@ package com.bwisni.pub1521;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -12,6 +14,8 @@ import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toolbar;
 import android.widget.ViewSwitcher;
+
+import java.util.Random;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
@@ -92,8 +96,7 @@ public class ConfirmActivity extends NfcActivity {
     }
 
     private void addCredits(){
-        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.chaching);
-        mediaPlayer.start();
+        playMedia(R.raw.chaching);
 
         drinker.setCredits(drinker.getCredits()+6);
         creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_top);
@@ -113,8 +116,7 @@ public class ConfirmActivity extends NfcActivity {
         creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_bottom);
 
         if(drinker.credits == 0){
-            mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.alarm);
-            mediaPlayer.start();
+            playMedia(R.raw.alarm);
 
             // Execute after 2 seconds have passed
             handler.postDelayed(new Runnable() {
@@ -125,8 +127,8 @@ public class ConfirmActivity extends NfcActivity {
             }, 2000);
         }
         else {
-            mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.beer);
-            mediaPlayer.start();
+
+            playPourSound();
 
             drinker.subtractCredit();
             creditsTextView.setText(Integer.toString(drinker.credits));
@@ -141,6 +143,20 @@ public class ConfirmActivity extends NfcActivity {
         }
 
 
+    }
+    protected boolean randPlayed = false;
+    private void playPourSound() {
+        playMedia(MainActivity.getSound());
+    }
+
+    private void playMedia(Uri uri) {
+        mediaPlayer = MediaPlayer.create(getApplicationContext(), uri);
+        mediaPlayer.start();
+    }
+
+    private void playMedia(int r) {
+        mediaPlayer = MediaPlayer.create(getApplicationContext(), r);
+        mediaPlayer.start();
     }
 
     private void finishActivity() {

@@ -7,7 +7,7 @@
         android:orderInCategory="1"
         android:title="Admin" />
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_exit"
         android:orderInCategory="100"
         android:title="Exit"
         app:showAsAction="never" />

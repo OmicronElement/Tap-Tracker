@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -14,10 +16,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TabHost;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,13 +39,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnItemClick;
 import butterknife.OnItemLongClick;
 import butterknife.OnLongClick;
+import butterknife.OnTouch;
+import lecho.lib.hellocharts.formatter.SimplePieChartValueFormatter;
 import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.AxisValue;
@@ -67,6 +77,7 @@ public class MainActivity extends NfcActivity {
     private static final int EDIT_REQ_CODE = 1;
     private static final int CONFIRM_REQ_CODE = 2;
     private static final int ADMIN_REQ_CODE = 3;
+    public static final int SOUND_REQ_CODE = 4;
     public static final int RESULT_DELETE = -1;
     public static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     public static final int BEERS_IN_KEG = 165;
@@ -76,10 +87,12 @@ public class MainActivity extends NfcActivity {
     private static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
 
 
+
     private static int mAccentColor;
     private static int mTextColor;
 
     @Bind(R.id.drinkersListView) ListView drinkersListView;
+    @Bind(R.id.soundsListView) ListView soundsListView;
     @Bind(R.id.numServedTextView) TextSwitcher numServedTextSwitcher;
     @Bind(R.id.kegTextView) TextView kegTextView;
     @Bind(R.id.kegEditText) EditText kegEditText;
@@ -90,14 +103,16 @@ public class MainActivity extends NfcActivity {
 
     @Bind(R.id.fab) FloatingActionButton fab;
 
-    ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
+    private ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
+    private PieChartData pieChartData;
     private long totalServed;
     private int kegCounter;
     private boolean adminMode = false;
     private long pieChartDate;
     private Map<String, DailyStat> dailyStats = new HashMap<>();
 
-    private PieChartData pieChartData;
+
+    private static List<Uri> soundsList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,12 +131,52 @@ public class MainActivity extends NfcActivity {
         mAccentColor = getResources().getColor(R.color.colorAccent);
         mTextColor = getResources().getColor(android.R.color.primary_text_dark);
 
-        kegEditText.setText(String.valueOf(BEERS_IN_KEG - 1));
-
         initTextSwitcher();
         initGraph();
         initKegGraph();
         initPieChart();
+        initAdminTabs();
+        initSounds();
+    }
+
+    private void initSounds() {
+        ArrayAdapter<Uri> adapter = new ArrayAdapter<>(getApplicationContext(),
+                android.R.layout.simple_list_item_1, soundsList);
+        soundsListView.setAdapter(adapter);
+    }
+
+    public static Uri getSound(){
+        // Play fun sounds randomly, otherwise use default sound
+        int oneIn = 5;
+        Random rand = new Random();
+        int value = rand.nextInt(oneIn);
+
+        Log.i("RNG", "Random generated: " + value);
+
+        int size = soundsList.size();
+        if(value == oneIn - 1 && size > 0){
+            value = rand.nextInt(size);
+            return soundsList.get(value);
+        }
+        else return Uri.parse("android.resource://com.bwisni.pub1521/" + R.raw.beer);
+    }
+
+    private void initAdminTabs() {
+        // Thanks Pacific P. Regmi http://www.viralandroid.com/
+        TabHost host = (TabHost)findViewById(R.id.tabHost);
+        host.setup();
+
+        //Tab 1
+        TabHost.TabSpec spec = host.newTabSpec("Settings");
+        spec.setContent(R.id.adminTab1);
+        spec.setIndicator("Settings");
+        host.addTab(spec);
+
+        //Tab 2
+        spec = host.newTabSpec("Users");
+        spec.setContent(R.id.adminTab2);
+        spec.setIndicator("Users");
+        host.addTab(spec);
     }
 
     private void initTextSwitcher() {
@@ -175,7 +230,9 @@ public class MainActivity extends NfcActivity {
         data.setAxisXBottom(axisX);
         data.setAxisYLeft(axisY);
         data.setValueLabelTextSize(20);
-        data.setValueLabelBackgroundEnabled(false);
+        data.setValueLabelBackgroundEnabled(true);
+        data.setValueLabelBackgroundAuto(false);
+        data.setValueLabelBackgroundColor(Color.parseColor("#00ffffff"));
 
         graph.setComboLineColumnChartData(data);
 
@@ -300,7 +357,7 @@ public class MainActivity extends NfcActivity {
 
         pieChartData.setHasLabels(true);
         pieChartData.setHasLabelsOnlyForSelected(false);
-        pieChartData.setHasLabelsOutside(false);
+        //pieChartData.setHasLabelsOutside(false);
         pieChartData.setHasCenterCircle(true);
         pieChartData.setCenterCircleScale(0.375f);
         pieChartData.setCenterText1("Today's");
@@ -342,13 +399,7 @@ public class MainActivity extends NfcActivity {
         for(String key : dailyStats.keySet()){
             DailyStat ds = dailyStats.get(key);
             SliceValue sv = new SliceValue(ds.getNumPours(), KEG_COLOR);
-
-            // Display only top 5 names
-            if(i < 5)
-                sv.setLabel(ds.getName());
-            else
-                sv.setLabel("");
-
+            sv.setLabel(ds.getName());
             values.add(sv);
             i++;
         }
@@ -468,11 +519,13 @@ public class MainActivity extends NfcActivity {
         if(adminMode) {
             adminMode = false;
             slideToBottom(adminLayout);
-            fab.setVisibility(View.GONE);
+            // Update keg counter if changed
+            onAdjustKegClick(new View(this));
         }
         else{
             adminMode = true;
-            fab.setVisibility(View.VISIBLE);
+            kegEditText.setText(String.valueOf(kegCounter));
+            kegEditText.setSelection(kegEditText.getText().length());
             slideToTop(adminLayout);
         }
     }
@@ -550,7 +603,7 @@ public class MainActivity extends NfcActivity {
         toggleAdminMode();
     }
 
-    @OnLongClick(R.id.adminResetButton) public  boolean onAdminResetClick(View view) {
+    @OnLongClick(R.id.adjustKegButton) public  boolean onAdjustKegClick(View view) {
         int newValue = Integer.parseInt(kegEditText.getText().toString());
 
         if(newValue <= BEERS_IN_KEG && newValue >= 0)
@@ -559,9 +612,27 @@ public class MainActivity extends NfcActivity {
             kegCounter = BEERS_IN_KEG;
 
         updateKegGraph();
-        Toast.makeText(this, "Keg Level Reset", Toast.LENGTH_SHORT).show();
         return true;
     }
+
+    @OnLongClick(R.id.newKegButton) public  boolean onNewKegClick(View view) {
+        kegEditText.setText(String.valueOf(BEERS_IN_KEG - 1));
+
+        return true;
+    }
+
+    @OnClick(R.id.selSoundButton) public void onSelSoundClick(View arg0) {
+            final Uri currentTone= RingtoneManager.getActualDefaultRingtoneUri(MainActivity.this,
+                    RingtoneManager.TYPE_ALARM);
+            Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Tone");
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, currentTone);
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+            startActivityForResult(intent, SOUND_REQ_CODE);
+    }
+
 
     // Returning from a dialogue
     @Override
@@ -619,9 +690,14 @@ public class MainActivity extends NfcActivity {
         if (requestCode == ADMIN_REQ_CODE && resultCode == RESULT_OK && intent != null) {
             toggleAdminMode();
         }
+
+        if (requestCode == SOUND_REQ_CODE && resultCode == RESULT_OK && intent != null) {
+            soundsList.add((Uri)intent.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI));
+            soundsListView.invalidateViews();
+        }
     }
 
-    //Called when NFC Tag has been read
+    // Called when NFC Tag has been read
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -665,7 +741,7 @@ public class MainActivity extends NfcActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_exit) {
             finish();
             return true;
         }

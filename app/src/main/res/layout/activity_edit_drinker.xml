@@ -34,7 +34,8 @@
             android:gravity="center_horizontal"
             android:textSize="@dimen/abc_text_size_display_1_material"
             android:clickable="true"
-            android:selectAllOnFocus="false" />
+            android:selectAllOnFocus="false"
+            android:singleLine="true" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -69,7 +70,8 @@
                 android:layout_alignParentEnd="true"
                 android:layout_toEndOf="@+id/editNameTextView"
                 android:inputType="number"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:singleLine="true" />
 
         </LinearLayout>
 
