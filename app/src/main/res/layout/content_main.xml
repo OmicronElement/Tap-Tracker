@@ -191,7 +191,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textAppearance="?android:attr/textAppearanceLarge"
-                            android:text="ADMIN"
+                            android:text="."
                             android:id="@+id/adminModeTextView"
                             android:gravity="center_horizontal"
                             android:textSize="@dimen/abc_text_size_display_3_material"
@@ -210,6 +210,8 @@
                             android:layout_alignParentTop="true"
                             android:layout_alignParentStart="true"
                             android:layout_toStartOf="@+id/adminModeTextView"
+                            android:descendantFocusability="beforeDescendants"
+                            android:focusableInTouchMode="true"
                             android:selectAllOnFocus="false" />
 
                         <Button
@@ -261,11 +263,13 @@
                         <ListView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:choiceMode="singleChoice"
                             android:id="@+id/soundsListView"
                             android:layout_alignParentEnd="true"
                             android:layout_below="@+id/textView5"
                             android:layout_alignStart="@+id/textView5"
-                            android:layout_above="@+id/selSoundButton" />
+                            android:layout_above="@+id/selSoundButton"
+                            android:theme="@style/AppTheme" />
 
                         <Button
                             android:layout_width="wrap_content"
@@ -290,7 +294,6 @@
                             android:id="@+id/drinkersListView"
                             android:alpha="100"
                             android:visibility="visible"
-                            android:paddingTop="@dimen/fab_margin"
                             android:layout_gravity="center_horizontal" />
 
                         <android.support.design.widget.FloatingActionButton

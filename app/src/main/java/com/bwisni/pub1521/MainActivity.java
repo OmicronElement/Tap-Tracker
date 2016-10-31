@@ -1,22 +1,33 @@
 package com.bwisni.pub1521;
 
+import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.nfc.NfcAdapter;
+import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
-import android.widget.ArrayAdapter;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -24,34 +35,34 @@ import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.Toolbar;
+import android.widget.Toast;;
 import android.widget.ViewSwitcher;
 
+import com.facebook.stetho.Stetho;
 import com.orm.SugarContext;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
+import be.appfoundry.nfclibrary.utilities.sync.NfcReadUtilityImpl;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnItemClick;
 import butterknife.OnItemLongClick;
 import butterknife.OnLongClick;
-import butterknife.OnTouch;
-import lecho.lib.hellocharts.formatter.SimplePieChartValueFormatter;
+
 import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.AxisValue;
@@ -70,67 +81,86 @@ import lecho.lib.hellocharts.view.ComboLineColumnChartView;
 import lecho.lib.hellocharts.view.PieChartView;
 
 
-public class MainActivity extends NfcActivity {
-    public static final String NDEF_PREFIX = "sms:"+AddDrinkerActivity.SMS_NUMBER+"?body=";
+public class MainActivity extends AppCompatActivity {
+    protected static final String SMS_NUMBER = "1521";
+    protected static final String NDEF_PREFIX = "sms:" + SMS_NUMBER + "?body=";
     private static final String ADMIN_NFC_ID = "664de4d0-0586-40aa-9518-a854d2657982";
     private static final int ADD_REQ_CODE = 0;
     private static final int EDIT_REQ_CODE = 1;
     private static final int CONFIRM_REQ_CODE = 2;
     private static final int ADMIN_REQ_CODE = 3;
-    public static final int SOUND_REQ_CODE = 4;
-    public static final int RESULT_DELETE = -1;
-    public static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
-    public static final int BEERS_IN_KEG = 165;
-    public static final int KEG_LOW_VALUE = 25;
-    private static final int KEG_BG_COLOR = Color.parseColor("#000000");
-    private static final int KEG_COLOR = Color.parseColor("#707070");
-    private static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
+    private static final int SOUND_REQ_CODE = 4;
+    private static final int PERMISSIONS_REQ_CODE = 5;
+    protected static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
+    protected static final int BEERS_IN_KEG = 165;
+    protected static final int KEG_LOW_VALUE = 25;
+    protected static final int KEG_BG_COLOR = Color.parseColor("#000000");
+    protected static final int KEG_COLOR = Color.parseColor("#707070");
+    protected static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
+    protected static final int GRAPH_VIEWPORT_DAYS = 7;
+    protected static final int GRAPH_VIEWPORT_MAX_Y = 50;
 
+    protected static int defaultSoundIndex = 0;
+    protected static int mAccentColor;
+    protected static int mTextColor;
 
+    @Bind(R.id.drinkersListView)
+    ListView drinkersListView;
+    @Bind(R.id.soundsListView)
+    ListView soundsListView;
+    @Bind(R.id.numServedTextView)
+    TextSwitcher numServedTextSwitcher;
+    @Bind(R.id.kegTextView)
+    TextView kegTextView;
+    @Bind(R.id.kegEditText)
+    EditText kegEditText;
+    @Bind(R.id.AdminLayout)
+    RelativeLayout adminLayout;
+    @Bind(R.id.graph)
+    ComboLineColumnChartView graph;
+    @Bind(R.id.kegGraph)
+    ColumnChartView kegGraph;
+    @Bind(R.id.pieChart)
+    PieChartView pieChart;
 
-    private static int mAccentColor;
-    private static int mTextColor;
+    @Bind(R.id.fab)
+    FloatingActionButton fab;
 
-    @Bind(R.id.drinkersListView) ListView drinkersListView;
-    @Bind(R.id.soundsListView) ListView soundsListView;
-    @Bind(R.id.numServedTextView) TextSwitcher numServedTextSwitcher;
-    @Bind(R.id.kegTextView) TextView kegTextView;
-    @Bind(R.id.kegEditText) EditText kegEditText;
-    @Bind(R.id.AdminLayout) RelativeLayout adminLayout;
-    @Bind(R.id.graph) ComboLineColumnChartView graph;
-    @Bind(R.id.kegGraph) ColumnChartView kegGraph;
-    @Bind(R.id.pieChart) PieChartView pieChart;
+    private ArrayList<Drinker> drinkersArrayList;
+    private Map<String, DailyStat> dailyStats;
+    private HashMap<Long, Integer> dailyTotals;
+    private static ArrayList<Sound> soundsList;
 
-    @Bind(R.id.fab) FloatingActionButton fab;
-
-    private ArrayList<Drinker> drinkersArrayList = new ArrayList<>();
     private PieChartData pieChartData;
     private long totalServed;
     private int kegCounter;
     private boolean adminMode = false;
     private long pieChartDate;
-    private Map<String, DailyStat> dailyStats = new HashMap<>();
 
-
-    private static List<Uri> soundsList = new ArrayList<>();
+    private PendingIntent pendingIntent;
+    private IntentFilter[] mIntentFilters;
+    private String[][] mTechLists;
+    private NfcAdapter mNfcAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setActionBar(toolbar);
+        setSupportActionBar(toolbar);
+        Stetho.initializeWithDefaults(this);
         // Keep device awake
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         ButterKnife.bind(this);
         SugarContext.init(getApplicationContext());
 
+        checkPermissions();
+
         loadData();
 
-        mAccentColor = getResources().getColor(R.color.colorAccent);
-        mTextColor = getResources().getColor(android.R.color.primary_text_dark);
-
+        initNfc();
+        initColors();
         initTextSwitcher();
         initGraph();
         initKegGraph();
@@ -139,13 +169,32 @@ public class MainActivity extends NfcActivity {
         initSounds();
     }
 
-    private void initSounds() {
-        ArrayAdapter<Uri> adapter = new ArrayAdapter<>(getApplicationContext(),
-                android.R.layout.simple_list_item_1, soundsList);
-        soundsListView.setAdapter(adapter);
+    private void initNfc() {
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+        mIntentFilters = new IntentFilter[]{new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED)};
+        mTechLists = new String[][]{new String[]{Ndef.class.getName()},
+                new String[]{NdefFormatable.class.getName()}};
     }
 
-    public static Uri getSound(){
+
+    private void initColors() {
+        mAccentColor = getResources().getColor(R.color.colorAccent);
+        mTextColor = getResources().getColor(android.R.color.primary_text_dark);
+    }
+
+    private void checkPermissions() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.NFC}, PERMISSIONS_REQ_CODE);
+    }
+
+    private void initSounds() {
+        soundsList = new ArrayList<>();
+        SoundAdapter adapter = new SoundAdapter(this, soundsList);
+        soundsListView.setAdapter(adapter);
+        soundsListView.setItemChecked(defaultSoundIndex, true);
+    }
+
+    public static Uri getSound() {
         // Play fun sounds randomly, otherwise use default sound
         int oneIn = 5;
         Random rand = new Random();
@@ -154,16 +203,15 @@ public class MainActivity extends NfcActivity {
         Log.i("RNG", "Random generated: " + value);
 
         int size = soundsList.size();
-        if(value == oneIn - 1 && size > 0){
+        if (value == oneIn - 1 && size > 0) {
             value = rand.nextInt(size);
-            return soundsList.get(value);
-        }
-        else return Uri.parse("android.resource://com.bwisni.pub1521/" + R.raw.beer);
+            return soundsList.get(value).getUri();
+        } else return soundsList.get(defaultSoundIndex).getUri();
     }
 
     private void initAdminTabs() {
         // Thanks Pacific P. Regmi http://www.viralandroid.com/
-        TabHost host = (TabHost)findViewById(R.id.tabHost);
+        TabHost host = (TabHost) findViewById(R.id.tabHost);
         host.setup();
 
         //Tab 1
@@ -208,14 +256,22 @@ public class MainActivity extends NfcActivity {
     }
 
     private void initGraph() {
-        List<DatePoint> dpList = DatePoint.listAll(DatePoint.class);
+        List<DailyStat> dailyStats = DailyStat.listAll(DailyStat.class);
         ComboLineColumnChartData data = new ComboLineColumnChartData
-                (generateColumnData(dpList), generateLineData(dpList));
+                (generateColumnData(dailyStats), generateLineData(dailyStats));
 
         List<AxisValue> axisValues = new ArrayList<>();
-        int x = 0;
-        for (DatePoint dp : dpList) {
+
+       /* for (DatePoint dp : dpList) {
             String dateString = getDateString(dp.date);
+            AxisValue axisValue = new AxisValue(x);
+            axisValue.setLabel(dateString);
+            axisValues.add(axisValue);
+            x++;
+        }*/
+        int x = 0;
+        for(Long date : dailyTotals.keySet()){
+            String dateString = getDateString(date);
             AxisValue axisValue = new AxisValue(x);
             axisValue.setLabel(dateString);
             axisValues.add(axisValue);
@@ -236,30 +292,45 @@ public class MainActivity extends NfcActivity {
 
         graph.setComboLineColumnChartData(data);
 
-        // Set viewport to last 7 days
+        // Set viewport to last GRAPH_VIEWPORT_DAYS days
         graph.setHorizontalScrollBarEnabled(true);
         Viewport v = new Viewport(graph.getMaximumViewport());
-        v.left = v.right - 7;
-        v.top = 50;
+        v.left = v.right - GRAPH_VIEWPORT_DAYS;
+        v.top = GRAPH_VIEWPORT_MAX_Y;
         graph.setCurrentViewport(v);
     }
 
-    private List<PointValue> getGraphData(List<DatePoint> dpList) {
+
+    private List<PointValue> getGraphDataFromDailyStats(List<DailyStat> dailyStats) {
         List<PointValue> values = new ArrayList<>();
+
+        dailyTotals = new LinkedHashMap<>();
+
+        for (DailyStat ds : dailyStats) {
+            if (dailyTotals.containsKey(ds.getDate())) {
+                int totalPoured = dailyTotals.get(ds.getDate());
+                totalPoured += ds.getNumPours();
+                dailyTotals.put(ds.getDate(), totalPoured);
+            } else {
+                dailyTotals.put(ds.getDate(), ds.getNumPours());
+            }
+        }
+
         int i = 0;
-        for (DatePoint dp : dpList) {
-            values.add(new PointValue(i, dp.pours));
+        for (Integer integer : dailyTotals.values()) {
+            values.add(new PointValue(i, integer));
             i++;
         }
 
         return values;
     }
 
-    private ColumnChartData generateColumnData(List<DatePoint> dpList) {
+    private ColumnChartData generateColumnData(List<DailyStat> dailyStats) {
         ArrayList<Column> columns = new ArrayList<>();
-        for(PointValue pv : getGraphData(dpList)){
+
+        for (PointValue pv : getGraphDataFromDailyStats(dailyStats)) {
             ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
-            SubcolumnValue sc =  new SubcolumnValue(pv.getY());
+            SubcolumnValue sc = new SubcolumnValue(pv.getY());
             sc.setColor(mAccentColor);
             subcolumnValues.add(0, sc);
 
@@ -268,12 +339,14 @@ public class MainActivity extends NfcActivity {
             //c.setHasLabelsOnlyForSelected(true);
             columns.add(c);
         }
-
-        return new ColumnChartData(columns);
+        ColumnChartData columnChartData = new ColumnChartData(columns);
+        columnChartData.setStacked(false);
+        return columnChartData;
     }
 
-    private LineChartData generateLineData(List<DatePoint> dpList) {
-        Line line = new Line(getGraphData(dpList));
+    private LineChartData generateLineData(List<DailyStat> dailyStats) {
+
+        Line line = new Line(getGraphDataFromDailyStats(dailyStats));
         line.setColor(Color.WHITE);
         line.setCubic(true);
         line.setHasLabels(false);
@@ -287,7 +360,7 @@ public class MainActivity extends NfcActivity {
     }
 
     private void updateGraph() {
-       initGraph();
+        initGraph();
     }
 
     private void initKegGraph() {
@@ -306,9 +379,9 @@ public class MainActivity extends NfcActivity {
         ColumnChartData columnChartData = new ColumnChartData();
 
         ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
-        SubcolumnValue sc =  new SubcolumnValue(kegCounter);
+        SubcolumnValue sc = new SubcolumnValue(kegCounter);
         //Add another subcolumn to bring max Y to BEERS_IN_KEG
-        SubcolumnValue bg =  new SubcolumnValue(BEERS_IN_KEG - kegCounter);
+        SubcolumnValue bg = new SubcolumnValue(BEERS_IN_KEG - kegCounter);
 
 
         columnChartData.setValueLabelBackgroundAuto(false);
@@ -331,10 +404,9 @@ public class MainActivity extends NfcActivity {
 
         bg.setColor(KEG_BG_COLOR);
 
-        if(kegCounter > KEG_LOW_VALUE) {
+        if (kegCounter > KEG_LOW_VALUE) {
             sc.setColor(KEG_COLOR);
-        }
-        else {
+        } else {
             sc.setColor(KEG_LOW_COLOR);
         }
 
@@ -352,7 +424,7 @@ public class MainActivity extends NfcActivity {
         return columnChartData;
     }
 
-    private void initPieChart(){
+    private void initPieChart() {
         pieChartData = new PieChartData(getPieChartData());
 
         pieChartData.setHasLabels(true);
@@ -372,8 +444,8 @@ public class MainActivity extends NfcActivity {
         pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
             @Override
             public void onValueSelected(int arcIndex, SliceValue value) {
-                String s = String.valueOf(value.getLabelAsChars()) +": "
-                        + String.valueOf((int) value.getValue()) +" pours";
+                String s = String.valueOf(value.getLabelAsChars()) + ": "
+                        + String.valueOf((int) value.getValue()) + " pours";
                 Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
             }
 
@@ -386,7 +458,7 @@ public class MainActivity extends NfcActivity {
         pieChart.setPieChartData(pieChartData);
     }
 
-    private void updatePieChart(){
+    private void updatePieChart() {
         pieChartData.setValues(getPieChartData());
         pieChart.startDataAnimation();
     }
@@ -395,13 +467,10 @@ public class MainActivity extends NfcActivity {
         List<SliceValue> values = new ArrayList<>();
 
         // Add a slice for each entry in dailyStats
-        int i = 0;
-        for(String key : dailyStats.keySet()){
-            DailyStat ds = dailyStats.get(key);
+        for (DailyStat ds : dailyStats.values()) {
             SliceValue sv = new SliceValue(ds.getNumPours(), KEG_COLOR);
             sv.setLabel(ds.getName());
             values.add(sv);
-            i++;
         }
 
         return values;
@@ -411,17 +480,15 @@ public class MainActivity extends NfcActivity {
         // Populate list with drinkers saved in database
         drinkersArrayList = new ArrayList<>(Drinker.listAll(Drinker.class));
 
-        // Search for existing DatePoint
-        List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
-        DatePoint dp;
-        // If no DatePoint for today, add one
-        try {
-            dp = dpList.get(0);
+        // Load data for daily pie chart
+        List<DailyStat> dsList = DailyStat.find(DailyStat.class, "date = ?", Long.toString(getDate()));
+        dailyStats = new HashMap<>();
+        for (DailyStat ds : dsList) {
+            dailyStats.put(ds.getNfcId(), ds);
         }
-        catch (IndexOutOfBoundsException e){
-            dp = new DatePoint(getDate(), 0);
-        }
-        dp.save();
+
+        // Retrieve sounds list
+        soundsList = new ArrayList<>(Sound.listAll(Sound.class));
 
         printUsers();
 
@@ -430,44 +497,45 @@ public class MainActivity extends NfcActivity {
 
         drinkersListView.invalidateViews();
 
-        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-        totalServed = sharedPref.getLong("totalServed", 30000);
-        kegCounter = sharedPref.getInt("kegCounter", BEERS_IN_KEG - 1);
 
-        Log.i("kegCounter",Integer.toString(kegCounter));
+        // Shared Preferences
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        totalServed = sharedPref.getLong("totalServed", 32800);
+        pieChartDate = sharedPref.getLong("pieChartDate", getDate());
+        kegCounter = sharedPref.getInt("kegCounter", BEERS_IN_KEG - 1);
+        defaultSoundIndex = sharedPref.getInt("defaultSoundIndex", defaultSoundIndex);
+
+        Log.i("kegCounter", Integer.toString(kegCounter));
     }
 
-    private void saveData() {
-        // Save each drinker in the list to the database
-        for (Drinker d : drinkersArrayList){
-            d.save();
-        }
-
-        // Save totalServed & kegCounter to SharedPrefs
+    private void saveSharedPrefs() {
+        // Save totalServed, kegCounter, soundsList to SharedPrefs
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putLong("totalServed", totalServed);
+        editor.putLong("pieChartDate", pieChartDate);
         editor.putInt("kegCounter", kegCounter);
+        editor.putInt("defaultSoundIndex", defaultSoundIndex);
         editor.apply();
     }
 
-    private void printUsers(){
-        for(Drinker d : drinkersArrayList)
-            Log.d("loadData",d.toString());
+    private void printUsers() {
+        for (Drinker d : drinkersArrayList)
+            Log.d("loadData", d.toString());
     }
 
     private void increaseTotalServed() {
         totalServed++;
 
         // Reduce keg counter
-        if(kegCounter > 0)
+        if (kegCounter > 0)
             kegCounter--;
 
-        // Find DatePoint for today and increment
+/*        // Find DatePoint for today and increment
         List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
         DatePoint dp = dpList.get(0);
         dp.addDrink();
-        dp.save();
+        dp.save();*/
 
         updateGraph();
         updateKegGraph();
@@ -486,20 +554,24 @@ public class MainActivity extends NfcActivity {
         }, 500);
     }
 
-    private void increaseDailyStat(String nfcId, String name){
+    private void increaseDailyStat(String nfcId, String name) {
         // Start a new chart if it's a new day
-        if(pieChartDate < getDate()){
+        if (pieChartDate < getDate()) {
             pieChartDate = getDate();
             dailyStats = new HashMap<>();
         }
 
-        if(dailyStats.containsKey(nfcId)){
-            DailyStat ds = dailyStats.get(nfcId);
+        DailyStat ds;
+        if (dailyStats.containsKey(nfcId)) {
+            ds = dailyStats.get(nfcId);
             ds.addDrink();
+        } else {
+            ds = new DailyStat(getDate(), name, nfcId, 1);
+            dailyStats.put(nfcId, ds);
         }
-        else
-            dailyStats.put(nfcId, new DailyStat(name, 1));
+        ds.save();
 
+        updateGraph();
         updatePieChart();
     }
 
@@ -516,13 +588,17 @@ public class MainActivity extends NfcActivity {
 
 
     private void toggleAdminMode() {
-        if(adminMode) {
+        if (adminMode) {
             adminMode = false;
             slideToBottom(adminLayout);
-            // Update keg counter if changed
-            onAdjustKegClick(new View(this));
-        }
-        else{
+            // Update keg counter
+            onAdjustKegClick();
+            saveSharedPrefs();
+            // Hide keyboard
+            InputMethodManager imm = (InputMethodManager)
+                    getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(adminLayout.getWindowToken(), 0);
+        } else {
             adminMode = true;
             kegEditText.setText(String.valueOf(kegCounter));
             kegEditText.setSelection(kegEditText.getText().length());
@@ -532,28 +608,28 @@ public class MainActivity extends NfcActivity {
 
     // View animation functions
     // Thanks to pvllnspk on StackOverflow
-    public static void slideToBottom(View view){
-        TranslateAnimation animate = new TranslateAnimation(0,0,0,view.getHeight());
+    public static void slideToBottom(View view) {
+        TranslateAnimation animate = new TranslateAnimation(0, 0, 0, view.getHeight());
         animate.setDuration(500);
         view.startAnimation(animate);
         view.setVisibility(View.GONE);
     }
 
-    public static void slideToTop(View view){
-        TranslateAnimation animate = new TranslateAnimation(0,0,view.getHeight(),0);
+    public static void slideToTop(View view) {
+        TranslateAnimation animate = new TranslateAnimation(0, 0, view.getHeight(), 0);
         animate.setDuration(500);
         view.startAnimation(animate);
         view.setVisibility(View.VISIBLE);
     }
 
-    public void addDrinker(String name, int credits, String id){
+    public void addDrinker(String name, int credits, String id) {
         Drinker drinker = new Drinker(name, credits, id);
         drinkersArrayList.add(drinker);
         drinker.save();
         drinkersListView.invalidateViews();
     }
 
-    public void removeDrinker(int position){
+    public void removeDrinker(int position) {
         //Remove from ArrayList and delete() sugar record
         drinkersArrayList.remove(position).delete();
         drinkersListView.invalidateViews();
@@ -575,7 +651,8 @@ public class MainActivity extends NfcActivity {
         return sdf.format(date);
     }
 
-    @OnItemLongClick(R.id.drinkersListView) boolean onItemLongClick(int position, View view) {
+    @OnItemLongClick(R.id.drinkersListView)
+    boolean onItemLongClick(int position, View view) {
         // Create intent to open up dialogue
         Intent intent = new Intent(getApplicationContext(),
                 EditDrinkerActivity.class);
@@ -591,7 +668,8 @@ public class MainActivity extends NfcActivity {
     }
 
     // Add a drinker
-    @OnClick(R.id.fab) public void onFabClick(View view) {
+    @OnClick(R.id.fab)
+    public void onFabClick(View view) {
         // Create intent to open up dialogue
         Intent intent = new Intent(getApplicationContext(),
                 AddDrinkerActivity.class);
@@ -599,14 +677,16 @@ public class MainActivity extends NfcActivity {
         startActivityForResult(intent, ADD_REQ_CODE);
     }
 
-    @OnClick(R.id.adminExitButton) public void onAdminExitClick(View view) {
+    @OnClick(R.id.adminExitButton)
+    public void onAdminExitClick(View view) {
         toggleAdminMode();
     }
 
-    @OnLongClick(R.id.adjustKegButton) public  boolean onAdjustKegClick(View view) {
+    @OnLongClick(R.id.adjustKegButton)
+    public boolean onAdjustKegClick() {
         int newValue = Integer.parseInt(kegEditText.getText().toString());
 
-        if(newValue <= BEERS_IN_KEG && newValue >= 0)
+        if (newValue <= BEERS_IN_KEG && newValue >= 0)
             kegCounter = newValue;
         else
             kegCounter = BEERS_IN_KEG;
@@ -615,24 +695,45 @@ public class MainActivity extends NfcActivity {
         return true;
     }
 
-    @OnLongClick(R.id.newKegButton) public  boolean onNewKegClick(View view) {
+    @OnLongClick(R.id.newKegButton)
+    public boolean onNewKegClick(View view) {
         kegEditText.setText(String.valueOf(BEERS_IN_KEG - 1));
 
         return true;
     }
 
-    @OnClick(R.id.selSoundButton) public void onSelSoundClick(View arg0) {
-            final Uri currentTone= RingtoneManager.getActualDefaultRingtoneUri(MainActivity.this,
-                    RingtoneManager.TYPE_ALARM);
-            Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Tone");
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, currentTone);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-            startActivityForResult(intent, SOUND_REQ_CODE);
+    @OnClick(R.id.selSoundButton)
+    public void onSelSoundClick(View arg0) {
+        final Uri currentTone = RingtoneManager.getActualDefaultRingtoneUri(MainActivity.this,
+                RingtoneManager.TYPE_ALARM);
+        Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Tone");
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, currentTone);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+        startActivityForResult(intent, SOUND_REQ_CODE);
     }
 
+    @OnItemClick(R.id.soundsListView)
+    public void onSoundClick(int position) {
+        Log.d("Sound", soundsList.get(position).toString());
+        playMedia(soundsList.get(position).getUri());
+        defaultSoundIndex = position;
+    }
+
+    @OnItemLongClick(R.id.soundsListView)
+    public boolean onSoundLongClick(int position, View view) {
+        soundsList.remove(position).delete();
+        initSounds();
+        return false;
+    }
+
+
+    private void playMedia(Uri uri) {
+        MediaPlayer mediaPlayer = MediaPlayer.create(this, uri);
+        mediaPlayer.start();
+    }
 
     // Returning from a dialogue
     @Override
@@ -664,7 +765,7 @@ public class MainActivity extends NfcActivity {
             drinkersListView.invalidateViews();
         }
         // Returning from Edit Drinker - Delete Drinker
-        if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_CANCELED && intent != null){
+        if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_CANCELED && intent != null) {
             int position = intent.getIntExtra("drinkerPosition", -1);
             removeDrinker(position);
         }
@@ -675,10 +776,10 @@ public class MainActivity extends NfcActivity {
 
             Drinker drinker = drinkersArrayList.get(position);
 
-            if(adminMode) {
-                drinker.setCredits(drinker.getCredits()+6);
-            }
-            else {
+            // If admin, add credits, else use one
+            if (adminMode) {
+                drinker.setCredits(drinker.getCredits() + 6);
+            } else {
                 drinker.subtractCredit();
                 increaseTotalServed();
                 increaseDailyStat(drinker.getNfcId(), drinker.getName());
@@ -692,7 +793,10 @@ public class MainActivity extends NfcActivity {
         }
 
         if (requestCode == SOUND_REQ_CODE && resultCode == RESULT_OK && intent != null) {
-            soundsList.add((Uri)intent.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI));
+            Sound newSound = new Sound(getApplicationContext(),
+                    (Uri) intent.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI));
+            soundsList.add(newSound);
+            newSound.save();
             soundsListView.invalidateViews();
         }
     }
@@ -702,26 +806,26 @@ public class MainActivity extends NfcActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        List<String> ndefMessages = getNfcMessages();
+        Collection<String> ndefMessages = new NfcReadUtilityImpl().readFromTagWithMap(intent).values();
 
         boolean newUser = true;
-        for(String m : ndefMessages){
+        for (String m : ndefMessages) {
             // Check if admin card
-            if(m.equals(NDEF_PREFIX+ADMIN_NFC_ID)) {
+            if (m.equals(NDEF_PREFIX + ADMIN_NFC_ID)) {
                 toggleAdminMode();
                 newUser = false;
             }
             // Otherwise search for matching drinker
-            else for(Drinker d : drinkersArrayList) {
-               String record = NDEF_PREFIX+d.nfcId;
-                if(m.equals(record)) {
+            else for (Drinker d : drinkersArrayList) {
+                String record = NDEF_PREFIX + d.nfcId;
+                if (m.equals(record)) {
                     openConfirmActivity(drinkersArrayList.indexOf(d));
                     newUser = false;
                 }
             }
         }
         // If we don't find a matching nfcId, open new user dialogue
-        if(newUser && adminMode){
+        if (newUser && adminMode) {
             onFabClick(getCurrentFocus());
         }
     }
@@ -764,7 +868,22 @@ public class MainActivity extends NfcActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        saveData();
+        saveSharedPrefs();
+    }
+
+    public void onResume(){
+        super.onResume();
+        if (mNfcAdapter != null) {
+            mNfcAdapter.enableForegroundDispatch(this, pendingIntent, mIntentFilters, mTechLists);
+        }
+    }
+
+    public void onPause(){
+        super.onPause();
+        if (mNfcAdapter != null)
+        {
+            mNfcAdapter.disableForegroundDispatch(this);
+        }
     }
 
 }
