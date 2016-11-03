@@ -1,10 +1,9 @@
 package com.bwisni.pub1521;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
-import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,12 +18,14 @@ import java.util.ArrayList;
  * Designed to be used along with default ListView item template 'simple_list_item_single_choice'
  */
 public class SoundAdapter extends ArrayAdapter {
-    public SoundAdapter(Context context, ArrayList<Sound> sounds) {
+    SoundAdapter(Context context, ArrayList<Sound> sounds) {
+        //noinspection unchecked
         super(context, 0, sounds);
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         // Get the data item for this position
        Sound sound = ((Sound) getItem(position));
         // Check if an existing view is being reused, otherwise inflate the view
@@ -33,6 +34,7 @@ public class SoundAdapter extends ArrayAdapter {
                     .inflate(android.R.layout.simple_list_item_single_choice, parent, false);
         }
 
+        assert sound != null;
         String title = sound.getTitle();
 
         if(title == null){

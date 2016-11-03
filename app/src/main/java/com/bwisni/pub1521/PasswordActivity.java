@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.WindowManager;
@@ -15,7 +16,7 @@ import android.widget.TextView;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class PasswordActivity extends Activity {
+public class PasswordActivity extends AppCompatActivity {
 
     @Bind(R.id.passwordEditText) EditText passwordEditText;
 

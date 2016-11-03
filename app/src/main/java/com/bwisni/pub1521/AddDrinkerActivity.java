@@ -3,10 +3,10 @@ package com.bwisni.pub1521;
 import android.content.Intent;
 import android.nfc.FormatException;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
@@ -67,13 +67,13 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        if(editTextName.getText().toString() != "")
+        if(!Objects.equals(editTextName.getText().toString(), ""))
             new WriteSmsNfcAsync(this, mAsyncOperationCallback).executeWriteOperation();
     }
 
     @Override
     public void callbackWithReturnValue(Boolean result) {
-        if (result == true){
+        if (result){
             Log.i("NFC", "Wrote UUID to tag:"+uuid);
             okAddDrinker();
         }

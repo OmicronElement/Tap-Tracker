@@ -27,30 +27,26 @@
             android:layout_height="wrap_content"
             android:text="Name"
             android:id="@+id/editNameTextView"
-            android:layout_alignParentStart="true"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:layout_alignBaseline="@+id/editTextName"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
             android:textSize="@dimen/abc_text_size_display_1_material"
             android:clickable="true"
             android:selectAllOnFocus="false"
-            android:singleLine="true" />
+            android:maxLines="1" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/nfcIdtextView"
-            android:layout_alignParentStart="true"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:layout_alignBaseline="@+id/editTextName"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal" />
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1">
 
             <TextView
@@ -59,19 +55,15 @@
                 android:text="Credits"
                 android:id="@+id/textView2"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:layout_alignParentStart="true"
-                android:layout_alignBaseline="@+id/editTextCredit" />
+                />
 
             <EditText
                 android:layout_width="75dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/editTextCredit"
-                android:layout_below="@+id/editNameTextView"
-                android:layout_alignParentEnd="true"
-                android:layout_toEndOf="@+id/editNameTextView"
                 android:inputType="number"
                 android:textAlignment="center"
-                android:singleLine="true" />
+                android:maxLines="1" />
 
         </LinearLayout>
 
@@ -84,39 +76,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="-1"
-                android:id="@+id/minusButton"
-                android:layout_alignWithParentIfMissing="false"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@+id/oneButton"
-                android:layout_alignEnd="@+id/oneButton"
-                android:layout_toLeftOf="@+id/oneButton"
-                android:layout_row="0"
-                android:layout_column="0" />
+                android:id="@+id/minusButton" />
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="+1"
-                android:id="@+id/oneButton"
-                android:layout_alignWithParentIfMissing="false"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentStart="true"
-                android:layout_row="0"
-                android:layout_column="1" />
+                android:id="@+id/oneButton" />
 
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="+6"
-                android:id="@+id/sixButton"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:layout_toEndOf="@+id/oneButton"
-                android:layout_alignParentStart="true"
-                android:layout_row="0"
-                android:layout_column="2"
-                android:layout_columnSpan="2" />
+                android:id="@+id/sixButton" />
         </LinearLayout>
 
     </LinearLayout>

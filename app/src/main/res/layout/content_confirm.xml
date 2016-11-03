@@ -10,7 +10,8 @@
     android:paddingTop="48dp"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.bwisni.pub1521.ConfirmActivity"
-    tools:showIn="@layout/activity_confirm">
+    tools:showIn="@layout/activity_confirm"
+    android:theme="@style/AppTheme">
 
     <TextView
         android:layout_width="wrap_content"

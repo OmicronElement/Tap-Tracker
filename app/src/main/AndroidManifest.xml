@@ -34,7 +34,7 @@
         <activity
             android:name=".ConfirmActivity"
             android:label="@string/title_activity_confirm"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme"
             android:screenOrientation="landscape"/>
 
         <meta-data

@@ -4,14 +4,18 @@ import com.orm.SugarRecord;
 
 /**
  * Created by Bryan on 10/4/2016.
+ * Stores the number of pours by a particular drinker on a given day
  */
-public class DailyStat extends SugarRecord{
+public class DailyStat extends SugarRecord {
     private int numPours;
     private String name;
     private String nfcId;
     private long date;
 
-    public DailyStat(){}
+    // Default constructor for SugarRecord
+    @SuppressWarnings("unused")
+    public DailyStat() {
+    }
 
     public DailyStat(long date, String name, String nfcId, int numPours) {
         this.date = date;

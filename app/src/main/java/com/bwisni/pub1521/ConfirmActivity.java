@@ -1,27 +1,24 @@
 package com.bwisni.pub1521;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
-import android.widget.Toolbar;
 import android.widget.ViewSwitcher;
 
-import java.util.Random;
-
-import be.appfoundry.nfclibrary.activities.NfcActivity;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class ConfirmActivity extends NfcActivity {
+public class ConfirmActivity extends AppCompatActivity {
     @Bind(R.id.drinkerConfirmName) TextView nameTextView;
     @Bind(R.id.drinkerConfirmCredits) TextSwitcher creditsTextView;
 
@@ -36,8 +33,6 @@ public class ConfirmActivity extends NfcActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_confirm);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setActionBar(toolbar);
         setTitle("Beer Here!");
 
         ButterKnife.bind(this);
@@ -60,7 +55,7 @@ public class ConfirmActivity extends NfcActivity {
                 myText.setLayoutParams(params);
 
                 myText.setTextSize(112);
-                myText.setTextColor(getResources().getColor(R.color.colorAccent));
+                myText.setTextColor(MainActivity.mAccentColor);
                 return myText;
             }
         });
@@ -69,11 +64,11 @@ public class ConfirmActivity extends NfcActivity {
         position = intent.getIntExtra("drinkerPosition", 0);
         boolean adminMode = intent.getBooleanExtra("adminMode", false);
 
-        String name = drinker.name;
-        nfcId = drinker.nfcId;
+        String name = drinker.getName();
+        nfcId = drinker.getNfcId();
 
         nameTextView.setText(name);
-        creditsTextView.setText(Integer.toString(drinker.credits));
+        creditsTextView.setText(Integer.toString(drinker.getCredits()));
 
         if(adminMode){
             // Execute after .5 seconds
@@ -95,12 +90,13 @@ public class ConfirmActivity extends NfcActivity {
         }
     }
 
+    @SuppressLint("PrivateResource")
     private void addCredits(){
         playMedia(R.raw.chaching);
 
         drinker.setCredits(drinker.getCredits()+6);
         creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_top);
-        creditsTextView.setText(Integer.toString(drinker.credits));
+        creditsTextView.setText(Integer.toString(drinker.getCredits()));
 
         // Execute after 1 second
         handler.postDelayed(new Runnable() {
@@ -112,10 +108,11 @@ public class ConfirmActivity extends NfcActivity {
 
     }
 
+    @SuppressLint("PrivateResource")
     private void pourDrink(){
         creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_bottom);
 
-        if(drinker.credits == 0){
+        if(drinker.getCredits() == 0){
             playMedia(R.raw.alarm);
 
             // Execute after 2 seconds have passed
@@ -131,7 +128,7 @@ public class ConfirmActivity extends NfcActivity {
             playPourSound();
 
             drinker.subtractCredit();
-            creditsTextView.setText(Integer.toString(drinker.credits));
+            creditsTextView.setText(Integer.toString(drinker.getCredits()));
 
             // Execute after 2 seconds have passed
             handler.postDelayed(new Runnable() {
@@ -144,7 +141,7 @@ public class ConfirmActivity extends NfcActivity {
 
 
     }
-    protected boolean randPlayed = false;
+
     private void playPourSound() {
         playMedia(MainActivity.getSound());
     }

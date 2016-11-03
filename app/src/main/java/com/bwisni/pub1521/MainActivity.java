@@ -1,6 +1,7 @@
 package com.bwisni.pub1521;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +21,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,7 +35,7 @@ import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
-import android.widget.Toast;;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import com.facebook.stetho.Stetho;
@@ -54,7 +54,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
-import be.appfoundry.nfclibrary.activities.NfcActivity;
 import be.appfoundry.nfclibrary.utilities.sync.NfcReadUtilityImpl;
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -62,7 +61,6 @@ import butterknife.OnClick;
 import butterknife.OnItemClick;
 import butterknife.OnItemLongClick;
 import butterknife.OnLongClick;
-
 import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.AxisValue;
@@ -80,7 +78,6 @@ import lecho.lib.hellocharts.view.ColumnChartView;
 import lecho.lib.hellocharts.view.ComboLineColumnChartView;
 import lecho.lib.hellocharts.view.PieChartView;
 
-
 public class MainActivity extends AppCompatActivity {
     protected static final String SMS_NUMBER = "1521";
     protected static final String NDEF_PREFIX = "sms:" + SMS_NUMBER + "?body=";
@@ -91,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int ADMIN_REQ_CODE = 3;
     private static final int SOUND_REQ_CODE = 4;
     private static final int PERMISSIONS_REQ_CODE = 5;
-    protected static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
+    //protected static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     protected static final int BEERS_IN_KEG = 165;
     protected static final int KEG_LOW_VALUE = 25;
     protected static final int KEG_BG_COLOR = Color.parseColor("#000000");
@@ -128,9 +125,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Drinker> drinkersArrayList;
     private Map<String, DailyStat> dailyStats;
-    private HashMap<Long, Integer> dailyTotals;
+    private Map<Long, ArrayList<Integer>> dailyTotals;
     private static ArrayList<Sound> soundsList;
-
     private PieChartData pieChartData;
     private long totalServed;
     private int kegCounter;
@@ -148,12 +144,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Stetho.initializeWithDefaults(this);
-        // Keep device awake
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         ButterKnife.bind(this);
         SugarContext.init(getApplicationContext());
+        Stetho.initializeWithDefaults(this);
+
+        // Keep device awake
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         checkPermissions();
 
@@ -178,17 +174,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @SuppressWarnings("deprecation")
     private void initColors() {
         mAccentColor = getResources().getColor(R.color.colorAccent);
         mTextColor = getResources().getColor(android.R.color.primary_text_dark);
     }
 
     private void checkPermissions() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.NFC}, PERMISSIONS_REQ_CODE);
+        String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.NFC};
+        ActivityCompat.requestPermissions(this, permissions, PERMISSIONS_REQ_CODE);
     }
 
     private void initSounds() {
-        soundsList = new ArrayList<>();
         SoundAdapter adapter = new SoundAdapter(this, soundsList);
         soundsListView.setAdapter(adapter);
         soundsListView.setItemChecked(defaultSoundIndex, true);
@@ -227,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
         host.addTab(spec);
     }
 
+    @SuppressLint("PrivateResource")
     private void initTextSwitcher() {
         numServedTextSwitcher.setInAnimation(getApplicationContext(),
                 android.support.design.R.anim.abc_slide_in_top);
@@ -262,13 +260,6 @@ public class MainActivity extends AppCompatActivity {
 
         List<AxisValue> axisValues = new ArrayList<>();
 
-       /* for (DatePoint dp : dpList) {
-            String dateString = getDateString(dp.date);
-            AxisValue axisValue = new AxisValue(x);
-            axisValue.setLabel(dateString);
-            axisValues.add(axisValue);
-            x++;
-        }*/
         int x = 0;
         for(Long date : dailyTotals.keySet()){
             String dateString = getDateString(date);
@@ -304,25 +295,60 @@ public class MainActivity extends AppCompatActivity {
     private List<PointValue> getGraphDataFromDailyStats(List<DailyStat> dailyStats) {
         List<PointValue> values = new ArrayList<>();
 
-        dailyTotals = new LinkedHashMap<>();
-
-        for (DailyStat ds : dailyStats) {
-            if (dailyTotals.containsKey(ds.getDate())) {
-                int totalPoured = dailyTotals.get(ds.getDate());
-                totalPoured += ds.getNumPours();
-                dailyTotals.put(ds.getDate(), totalPoured);
-            } else {
-                dailyTotals.put(ds.getDate(), ds.getNumPours());
-            }
-        }
+        generateDailyTotals(dailyStats);
 
         int i = 0;
-        for (Integer integer : dailyTotals.values()) {
-            values.add(new PointValue(i, integer));
+        for (ArrayList<Integer> arrayList: dailyTotals.values()) {
+            int total = 0;
+            for(Integer integer : arrayList){
+                total += integer;
+            }
+            values.add(new PointValue(i, total));
             i++;
         }
 
         return values;
+    }
+
+    private void generateDailyTotals(List<DailyStat> dailyStats) {
+        dailyTotals = new LinkedHashMap<>();
+
+        for (DailyStat ds : dailyStats) {
+            ArrayList<Integer> totalPoured = new ArrayList<>();
+            if (dailyTotals.containsKey(ds.getDate())) {
+                totalPoured = dailyTotals.get(ds.getDate());
+                totalPoured.add(ds.getNumPours());
+                dailyTotals.put(ds.getDate(), totalPoured);
+            } else {
+                totalPoured.add(ds.getNumPours());
+                dailyTotals.put(ds.getDate(), totalPoured);
+            }
+        }
+    }
+
+
+    private ColumnChartData generateStackedColumnData(List<DailyStat> dailyStats) {
+        ArrayList<Column> columns = new ArrayList<>();
+
+        generateDailyTotals(dailyStats);
+
+        for (Long l : dailyTotals.keySet()) {
+            ArrayList<Integer> arrayList = dailyTotals.get(l);
+            List<SubcolumnValue>  subcolumnValues = new ArrayList<>();
+            for(Integer integer : arrayList) {
+                SubcolumnValue sc = new SubcolumnValue(integer);
+                sc.setColor(mAccentColor);
+                subcolumnValues.add(sc);
+            }
+
+            Column c = new Column(subcolumnValues);
+            c.setHasLabels(false);
+            //c.setHasLabelsOnlyForSelected(true);
+            columns.add(c);
+        }
+        ColumnChartData columnChartData = new ColumnChartData(columns);
+        columnChartData.setStacked(true);
+        return columnChartData;
     }
 
     private ColumnChartData generateColumnData(List<DailyStat> dailyStats) {
@@ -335,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
             subcolumnValues.add(0, sc);
 
             Column c = new Column(subcolumnValues);
-            c.setHasLabels(true);
+            c.setHasLabels(false);
             //c.setHasLabelsOnlyForSelected(true);
             columns.add(c);
         }
@@ -349,9 +375,9 @@ public class MainActivity extends AppCompatActivity {
         Line line = new Line(getGraphDataFromDailyStats(dailyStats));
         line.setColor(Color.WHITE);
         line.setCubic(true);
-        line.setHasLabels(false);
         line.setHasLines(true);
         line.setHasPoints(true);
+        line.setHasLabels(true);
 
         List<Line> lines = new ArrayList<>();
         lines.add(line);
@@ -383,23 +409,6 @@ public class MainActivity extends AppCompatActivity {
         //Add another subcolumn to bring max Y to BEERS_IN_KEG
         SubcolumnValue bg = new SubcolumnValue(BEERS_IN_KEG - kegCounter);
 
-
-        columnChartData.setValueLabelBackgroundAuto(false);
-
-/*
-        // Set graph color and label position based on kegCounter value
-        if(kegCounter < BEERS_IN_KEG/2){
-            bg.setLabel(String.valueOf(kegCounter));
-            sc.setLabel("");
-            columnChartData.setValueLabelBackgroundColor(KEG_BG_COLOR);
-        }
-        else{
-            sc.setLabel(String.valueOf(kegCounter));
-            bg.setLabel("");
-            columnChartData.setValueLabelBackgroundColor(KEG_COLOR);
-        }
-*/
-
         kegTextView.setText(String.valueOf(kegCounter));
 
         bg.setColor(KEG_BG_COLOR);
@@ -410,8 +419,8 @@ public class MainActivity extends AppCompatActivity {
             sc.setColor(KEG_LOW_COLOR);
         }
 
-        subcolumnValues.add(0, sc);
-        subcolumnValues.add(1, bg);
+        subcolumnValues.add(sc);
+        subcolumnValues.add(bg);
 
         Column c = new Column(subcolumnValues);
         c.setHasLabels(false);
@@ -454,6 +463,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        pieChartData.setAxisYLeft(new Axis().setMaxLabelChars(5));
 
         pieChart.setPieChartData(pieChartData);
     }
@@ -799,6 +810,8 @@ public class MainActivity extends AppCompatActivity {
             newSound.save();
             soundsListView.invalidateViews();
         }
+
+        saveSharedPrefs();
     }
 
     // Called when NFC Tag has been read
@@ -817,7 +830,7 @@ public class MainActivity extends AppCompatActivity {
             }
             // Otherwise search for matching drinker
             else for (Drinker d : drinkersArrayList) {
-                String record = NDEF_PREFIX + d.nfcId;
+                String record = NDEF_PREFIX + d.getNfcId();
                 if (m.equals(record)) {
                     openConfirmActivity(drinkersArrayList.indexOf(d));
                     newUser = false;

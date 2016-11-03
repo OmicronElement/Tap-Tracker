@@ -9,14 +9,17 @@ import com.orm.SugarRecord;
 
 /**
  * Created by Bryan on 10/28/2016.
+ * Database representation for ringtone Uri
  */
 public class Sound extends SugarRecord{
     private String uriString;
     private String title;
 
+    // Default constructor for SugarRecord
+    @SuppressWarnings("unused")
     public Sound(){}
 
-    public Sound(Context context, Uri uri){
+    Sound(Context context, Uri uri){
         uriString = uri.toString();
         title = generateTitle(context);
     }
@@ -33,7 +36,7 @@ public class Sound extends SugarRecord{
         return title;
     }
 
-    public Uri getUri() {
+    Uri getUri() {
         return Uri.parse(uriString);
     }
 

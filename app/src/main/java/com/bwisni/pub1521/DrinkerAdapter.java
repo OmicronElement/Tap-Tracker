@@ -1,6 +1,7 @@
 package com.bwisni.pub1521;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 
 /**
  * Created by Bryan on 4/14/2016.
+ * ListViewAdapter for Drinker class
  */
 public class DrinkerAdapter extends ArrayAdapter<Drinker> {
     // View lookup cache
@@ -20,12 +22,13 @@ public class DrinkerAdapter extends ArrayAdapter<Drinker> {
         TextView credits;
     }
 
-    public DrinkerAdapter(Context context, ArrayList<Drinker> drinkers) {
+    DrinkerAdapter(Context context, ArrayList<Drinker> drinkers) {
         super(context, 0, drinkers);
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
 
         Drinker drinker = getItem(position);
 
@@ -41,8 +44,9 @@ public class DrinkerAdapter extends ArrayAdapter<Drinker> {
             viewHolder = (ViewHolder) convertView.getTag();
         }
         // Populate the data into the template view using the data object
-        viewHolder.name.setText(drinker.name);
-        viewHolder.credits.setText(Integer.toString(drinker.credits));
+        assert drinker != null;
+        viewHolder.name.setText(drinker.getName());
+        viewHolder.credits.setText(String.valueOf(drinker.getCredits()));
         // Return the completed view to render on screen
         return convertView;
     }
