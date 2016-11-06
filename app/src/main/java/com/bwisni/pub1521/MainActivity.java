@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -15,9 +17,12 @@ import android.nfc.NfcAdapter;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -26,21 +31,27 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 import android.widget.ViewSwitcher;
 
+import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.facebook.stetho.Stetho;
 import com.orm.SugarContext;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -88,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int ADMIN_REQ_CODE = 3;
     private static final int SOUND_REQ_CODE = 4;
     private static final int PERMISSIONS_REQ_CODE = 5;
+    private static final int CAMERA_REQ_CODE = 6;
     //protected static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     protected static final int BEERS_IN_KEG = 165;
     protected static final int KEG_LOW_VALUE = 25;
@@ -100,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
     protected static int defaultSoundIndex = 0;
     protected static int mAccentColor;
     protected static int mTextColor;
+    private static ColorGenerator generator = ColorGenerator.MATERIAL;
 
     @Bind(R.id.drinkersListView)
     ListView drinkersListView;
@@ -119,11 +132,14 @@ public class MainActivity extends AppCompatActivity {
     ColumnChartView kegGraph;
     @Bind(R.id.pieChart)
     PieChartView pieChart;
+    @Bind(R.id.slideshow)
+    ViewFlipper mViewFlipper;
 
     @Bind(R.id.fab)
     FloatingActionButton fab;
 
     private ArrayList<Drinker> drinkersArrayList;
+    private Map<String, Drinker> drinkers;
     private Map<String, DailyStat> dailyStats;
     private Map<Long, ArrayList<Integer>> dailyTotals;
     private static ArrayList<Sound> soundsList;
@@ -131,12 +147,14 @@ public class MainActivity extends AppCompatActivity {
     private long totalServed;
     private int kegCounter;
     private boolean adminMode = false;
+
     private long pieChartDate;
 
     private PendingIntent pendingIntent;
     private IntentFilter[] mIntentFilters;
     private String[][] mTechLists;
     private NfcAdapter mNfcAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,6 +173,12 @@ public class MainActivity extends AppCompatActivity {
 
         loadData();
 
+        for(Drinker d : drinkersArrayList){
+            ColorGenerator generator = ColorGenerator.MATERIAL;
+            d.setColor(generator.getColor(d.getNfcId()));
+            d.save();
+        }
+
         initNfc();
         initColors();
         initTextSwitcher();
@@ -163,7 +187,52 @@ public class MainActivity extends AppCompatActivity {
         initPieChart();
         initAdminTabs();
         initSounds();
+        initSlideshow();
     }
+
+    private void initSlideshow() {
+        File root = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        if (root != null) {
+            for (final File fileEntry : root.listFiles()) {
+                addPicToSlideshow(fileEntry.toString());
+            }
+        }
+
+        mViewFlipper.setInAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.support.design.R.anim.abc_grow_fade_in_from_bottom));
+        mViewFlipper.setOutAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.support.design.R.anim.abc_fade_out));
+        mViewFlipper.setAutoStart(true);
+        mViewFlipper.setFlipInterval(10000);
+        mViewFlipper.startFlipping();
+    }
+
+    private void addPicToSlideshow(String photoPath) {
+        // Get the dimensions of the View
+        mViewFlipper.setMeasureAllChildren(true);
+        int targetW = 250;
+        int targetH = 140;
+
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(photoPath, bmOptions);
+        ImageView IV = new ImageView(this);
+        IV.setImageBitmap(bitmap);
+        mViewFlipper.addView(IV);
+        mViewFlipper.startFlipping();
+    }
+
 
     private void initNfc() {
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -181,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkPermissions() {
-        String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.NFC};
+        String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.NFC, Manifest.permission.WRITE_EXTERNAL_STORAGE};
         ActivityCompat.requestPermissions(this, permissions, PERMISSIONS_REQ_CODE);
     }
 
@@ -261,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
         List<AxisValue> axisValues = new ArrayList<>();
 
         int x = 0;
-        for(Long date : dailyTotals.keySet()){
+        for (Long date : dailyTotals.keySet()) {
             String dateString = getDateString(date);
             AxisValue axisValue = new AxisValue(x);
             axisValue.setLabel(dateString);
@@ -298,9 +367,9 @@ public class MainActivity extends AppCompatActivity {
         generateDailyTotals(dailyStats);
 
         int i = 0;
-        for (ArrayList<Integer> arrayList: dailyTotals.values()) {
+        for (ArrayList<Integer> arrayList : dailyTotals.values()) {
             int total = 0;
-            for(Integer integer : arrayList){
+            for (Integer integer : arrayList) {
                 total += integer;
             }
             values.add(new PointValue(i, total));
@@ -334,8 +403,8 @@ public class MainActivity extends AppCompatActivity {
 
         for (Long l : dailyTotals.keySet()) {
             ArrayList<Integer> arrayList = dailyTotals.get(l);
-            List<SubcolumnValue>  subcolumnValues = new ArrayList<>();
-            for(Integer integer : arrayList) {
+            List<SubcolumnValue> subcolumnValues = new ArrayList<>();
+            for (Integer integer : arrayList) {
                 SubcolumnValue sc = new SubcolumnValue(integer);
                 sc.setColor(mAccentColor);
                 subcolumnValues.add(sc);
@@ -464,8 +533,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        pieChartData.setAxisYLeft(new Axis().setMaxLabelChars(5));
-
         pieChart.setPieChartData(pieChartData);
     }
 
@@ -480,7 +547,10 @@ public class MainActivity extends AppCompatActivity {
         // Add a slice for each entry in dailyStats
         for (DailyStat ds : dailyStats.values()) {
             SliceValue sv = new SliceValue(ds.getNumPours(), KEG_COLOR);
-            sv.setLabel(ds.getName());
+
+            Drinker drinker = drinkers.get(ds.getNfcId());
+            sv.setLabel(drinker.getShortName());
+            sv.setColor(drinker.getColor());
             values.add(sv);
         }
 
@@ -488,8 +558,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        // Populate list with drinkers saved in database
+        // Populate with drinkers saved in database
         drinkersArrayList = new ArrayList<>(Drinker.listAll(Drinker.class));
+        drinkers = new HashMap<>();
+        for (Drinker d : drinkersArrayList) {
+            drinkers.put(d.getNfcId(), d);
+        }
 
         // Load data for daily pie chart
         List<DailyStat> dsList = DailyStat.find(DailyStat.class, "date = ?", Long.toString(getDate()));
@@ -565,7 +639,7 @@ public class MainActivity extends AppCompatActivity {
         }, 500);
     }
 
-    private void increaseDailyStat(String nfcId, String name) {
+    private void increaseDailyStat(Drinker drinker) {
         // Start a new chart if it's a new day
         if (pieChartDate < getDate()) {
             pieChartDate = getDate();
@@ -573,12 +647,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         DailyStat ds;
-        if (dailyStats.containsKey(nfcId)) {
-            ds = dailyStats.get(nfcId);
+        if (dailyStats.containsKey(drinker.getNfcId())) {
+            ds = dailyStats.get(drinker.getNfcId());
             ds.addDrink();
         } else {
-            ds = new DailyStat(getDate(), name, nfcId, 1);
-            dailyStats.put(nfcId, ds);
+            ds = new DailyStat(getDate(), drinker, 1);
+            dailyStats.put(drinker.getNfcId(), ds);
         }
         ds.save();
 
@@ -602,19 +676,23 @@ public class MainActivity extends AppCompatActivity {
         if (adminMode) {
             adminMode = false;
             slideToBottom(adminLayout);
+            hideKeyboard(adminLayout);
             // Update keg counter
             onAdjustKegClick();
             saveSharedPrefs();
-            // Hide keyboard
-            InputMethodManager imm = (InputMethodManager)
-                    getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(adminLayout.getWindowToken(), 0);
         } else {
             adminMode = true;
             kegEditText.setText(String.valueOf(kegCounter));
             kegEditText.setSelection(kegEditText.getText().length());
             slideToTop(adminLayout);
         }
+    }
+
+    private void hideKeyboard(View view) {
+        // Hide keyboard
+        InputMethodManager imm = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     // View animation functions
@@ -636,6 +714,7 @@ public class MainActivity extends AppCompatActivity {
     public void addDrinker(String name, int credits, String id) {
         Drinker drinker = new Drinker(name, credits, id);
         drinkersArrayList.add(drinker);
+        drinkers.put(id, drinker);
         drinker.save();
         drinkersListView.invalidateViews();
     }
@@ -656,7 +735,7 @@ public class MainActivity extends AppCompatActivity {
         return calendar.getTimeInMillis();
     }
 
-    private String getDateString(long x) {
+    protected static String getDateString(long x) {
         Date date = new Date(x);
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy", Locale.US);
         return sdf.format(date);
@@ -740,10 +819,22 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    @OnClick(R.id.cameraButton)
+    public void onCameraClick(View view) {
+        startCamera();
+    }
 
     private void playMedia(Uri uri) {
         MediaPlayer mediaPlayer = MediaPlayer.create(this, uri);
         mediaPlayer.start();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (adminMode)
+            toggleAdminMode();
+        else
+            super.onBackPressed();
     }
 
     // Returning from a dialogue
@@ -793,7 +884,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 drinker.subtractCredit();
                 increaseTotalServed();
-                increaseDailyStat(drinker.getNfcId(), drinker.getName());
+                increaseDailyStat(drinker);
             }
 
             drinker.save();
@@ -809,6 +900,14 @@ public class MainActivity extends AppCompatActivity {
             soundsList.add(newSound);
             newSound.save();
             soundsListView.invalidateViews();
+        }
+        if (requestCode == CAMERA_REQ_CODE && resultCode == RESULT_OK && intent != null) {
+            Bundle extras = intent.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            ImageView imageView = new ImageView(this);
+            imageView.setImageBitmap(imageBitmap);
+            mViewFlipper.addView(imageView);
+            mViewFlipper.startFlipping();
         }
 
         saveSharedPrefs();
@@ -882,21 +981,63 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         saveSharedPrefs();
+        mViewFlipper.stopFlipping();
     }
 
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         if (mNfcAdapter != null) {
             mNfcAdapter.enableForegroundDispatch(this, pendingIntent, mIntentFilters, mTechLists);
         }
     }
 
-    public void onPause(){
+    public void onPause() {
         super.onPause();
-        if (mNfcAdapter != null)
-        {
+        if (mNfcAdapter != null) {
             mNfcAdapter.disableForegroundDispatch(this);
         }
     }
 
+
+    String mCurrentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        Log.d("PhotoPath", mCurrentPhotoPath);
+        return image;
+    }
+
+    private void startCamera() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Log.e("Camera", "Error occurred while creating the File");
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "com.bwisni.pub1521.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, CAMERA_REQ_CODE);
+            }
+        }
+    }
 }

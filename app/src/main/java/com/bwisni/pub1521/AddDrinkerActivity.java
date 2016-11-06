@@ -1,9 +1,12 @@
 package com.bwisni.pub1521;
 
+import android.content.Context;
 import android.content.Intent;
 import android.nfc.FormatException;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import java.util.Objects;
@@ -21,7 +24,8 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
-    @Bind(R.id.editTextName) EditText editTextName;
+    @Bind(R.id.editTextName)
+    EditText editTextName;
 
     // Generate unique user id
     String uuid = UUID.randomUUID().toString();
@@ -29,10 +33,9 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     AsyncOperationCallback mAsyncOperationCallback = new AsyncOperationCallback() {
 
         @Override
-        public boolean performWrite(NfcWriteUtility writeUtility) throws ReadOnlyTagException, InsufficientCapacityException, TagNotPresentException, FormatException {
-        //NdefMessage ndefMessage = new NdefMessage(uuid.getBytes());
-
-        return writeUtility.writeSmsToTagFromIntent(MainActivity.SMS_NUMBER, uuid, getIntent());
+        public boolean performWrite(NfcWriteUtility writeUtility) throws ReadOnlyTagException,
+                InsufficientCapacityException, TagNotPresentException, FormatException {
+            return writeUtility.writeSmsToTagFromIntent(MainActivity.SMS_NUMBER, uuid, getIntent());
         }
 
     };
@@ -48,10 +51,10 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
         editTextName.requestFocus();
     }
 
-    void okAddDrinker(){
+    void okAddDrinker() {
         String name = editTextName.getText().toString();
 
-        if(!name.equals("")) {
+        if (!name.equals("")) {
             // Send data back to Main activity
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
 
@@ -59,22 +62,30 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
             intent.putExtra("nfcId", uuid);
 
             setResult(RESULT_OK, intent);
+            hideKeyboard(editTextName);
             finish();
         }
+    }
+
+    private void hideKeyboard(View view) {
+        // Hide keyboard
+        InputMethodManager imm = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        if(!Objects.equals(editTextName.getText().toString(), ""))
+        if (!Objects.equals(editTextName.getText().toString(), ""))
             new WriteSmsNfcAsync(this, mAsyncOperationCallback).executeWriteOperation();
     }
 
     @Override
     public void callbackWithReturnValue(Boolean result) {
-        if (result){
-            Log.i("NFC", "Wrote UUID to tag:"+uuid);
+        if (result) {
+            Log.i("NFC", "Wrote UUID to tag:" + uuid);
             okAddDrinker();
         }
     }
@@ -87,7 +98,7 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     @Override
     public void onError(Exception e) {
         //Toast.makeText(this,"error",Toast.LENGTH_SHORT).show();
-        Log.e("NFC",e.getMessage());
+        Log.e("NFC", e.getMessage());
     }
 }
 

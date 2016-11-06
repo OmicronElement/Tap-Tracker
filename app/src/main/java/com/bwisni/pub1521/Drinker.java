@@ -1,5 +1,6 @@
 package com.bwisni.pub1521;
 
+import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.orm.SugarRecord;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ public class Drinker extends SugarRecord implements Serializable {
     private String nfcId = "";
     private int credits = 0;
     private int totalDrank = 0;
+    private int color;
 
     // Default constructor for SugarRecord
     @SuppressWarnings("unused")
@@ -20,12 +22,23 @@ public class Drinker extends SugarRecord implements Serializable {
     }
 
      Drinker(String name, int credits, String NfcId) {
-        this.name = name;
-        this.credits = credits;
-        this.nfcId = NfcId;
+         this.name = name;
+         this.credits = credits;
+         this.nfcId = NfcId;
+         ColorGenerator generator = ColorGenerator.MATERIAL;
+         this.color = generator.getColor(nfcId);
     }
 
-     void subtractCredit(){
+    public int getColor() {
+        return color;
+    }
+
+    public void setColor(int color) {
+        this.color = color;
+    }
+
+
+    void subtractCredit(){
         if(credits > 0) {
             credits--;
             totalDrank++;
@@ -69,4 +82,7 @@ public class Drinker extends SugarRecord implements Serializable {
         this.totalDrank = totalDrank;
     }
 
+    public String getShortName() {
+        return Character.toString(name.charAt(0));
+    }
 }

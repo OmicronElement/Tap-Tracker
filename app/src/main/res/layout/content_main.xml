@@ -84,11 +84,35 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true" />
 
+        <ViewFlipper
+            android:layout_width="250dp"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/slideshow"
+            android:layout_alignParentBottom="true"
+            android:layout_height="140dp" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignTop="@+id/slideshow"
+            android:layout_toEndOf="@+id/slideshow">
+
+            <ImageButton
+                android:layout_width="@dimen/camera_icon_size"
+                android:layout_height="@dimen/camera_icon_size"
+                app:srcCompat="@android:drawable/ic_menu_camera"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/cameraButton"
+                android:layout_alignTop="@+id/slideshow"
+                android:layout_centerInParent="true"
+                android:scaleType="fitCenter" />
+        </RelativeLayout>
+
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/graphsLayoutHeight"
-            android:weightSum="1">
+            android:weightSum="1"
+            android:layout_height="@dimen/graphsLayoutHeight">
 
             <RelativeLayout
                 android:layout_width="150dp"
@@ -129,14 +153,14 @@
             </RelativeLayout>
 
             <lecho.lib.hellocharts.view.ComboLineColumnChartView
-                android:layout_width="615dp"
                 android:layout_height="match_parent"
                 android:id="@+id/graph"
-                android:layout_toStartOf="@+id/pieChart" />
+                android:layout_toStartOf="@+id/pieChart"
+                android:layout_width="575dp" />
 
             <lecho.lib.hellocharts.view.PieChartView
                 android:id="@+id/pieChart"
-                android:layout_width="200dp"
+                android:layout_width="@dimen/pieChartWidth"
                 android:layout_height="match_parent"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
@@ -171,10 +195,9 @@
                     android:layout_height="wrap_content"
                     android:tabStripEnabled="false"
                     android:theme="@style/AppTheme"
-                    android:backgroundTint="@color/colorAccent"
                     android:animateLayoutChanges="false"
                     android:alwaysDrawnWithCache="false"
-                    android:fadingEdge="horizontal"></TabWidget>
+                    android:fadingEdge="horizontal"/>
 
                 <FrameLayout
                     android:id="@android:id/tabcontent"
@@ -234,7 +257,7 @@
                             android:layout_alignParentStart="true"
                             android:layout_alignEnd="@+id/adjustKegButton"
                             android:layout_above="@+id/adminExitButton"
-                            android:textSize="@dimen/abc_text_size_display_3_material" />
+                            android:textSize="36sp" />
 
                         <Button
                             android:layout_width="wrap_content"
@@ -258,7 +281,8 @@
                             android:layout_alignParentTop="true"
                             android:layout_alignParentEnd="true"
                             android:layout_alignBottom="@+id/adjustKegButton"
-                            android:layout_toEndOf="@+id/adminModeTextView" />
+                            android:layout_toEndOf="@+id/adminModeTextView"
+                            android:padding="@dimen/activity_vertical_margin" />
 
                         <ListView
                             android:layout_width="wrap_content"
@@ -273,12 +297,13 @@
 
                         <Button
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@android:dimen/notification_large_icon_height"
                             android:text="Add Sound"
                             android:id="@+id/selSoundButton"
                             android:layout_alignParentBottom="true"
                             android:layout_alignParentEnd="true"
-                            android:layout_alignStart="@+id/soundsListView" />
+                            android:layout_alignStart="@+id/soundsListView"
+                            />
 
                     </RelativeLayout>
 

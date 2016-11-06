@@ -4,6 +4,11 @@
 
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-feature android:name="android.hardware.camera"
+        android:required="true" />
+
 
     <application
         android:name="com.orm.SugarApp"
@@ -12,6 +17,17 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.bwisni.pub1521.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -42,7 +58,7 @@
             android:value="pub1521.db" />
         <meta-data
             android:name="VERSION"
-            android:value="8" />
+            android:value="9" />
         <meta-data
             android:name="QUERY_LOG"
             android:value="true" />
@@ -53,6 +69,7 @@
         <activity android:name=".PasswordActivity"
             android:theme="@style/AppTheme"
             android:screenOrientation="landscape">
+
         </activity>
     </application>
 

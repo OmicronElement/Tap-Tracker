@@ -44,4 +44,29 @@
         android:layout_below="@+id/drinkerConfirmCredits"
         android:layout_centerHorizontal="true" />
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/creditsString"
+        android:layout_marginBottom="@dimen/dialoguePad">
+
+        <ImageView
+            android:id="@+id/user_icon"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_width="90dp"
+            android:layout_height="90dp" />
+
+        <lecho.lib.hellocharts.view.PieChartView
+            android:layout_height="@dimen/pieChartWidth"
+            android:id="@+id/userPieChart"
+            android:visibility="visible"
+            android:cursorVisible="false"
+            android:layout_width="@dimen/pieChartWidth"
+            android:layout_centerInParent="true"
+            android:alpha=".75" />
+    </RelativeLayout>
+
 </RelativeLayout>

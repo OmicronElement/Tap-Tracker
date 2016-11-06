@@ -23,6 +23,9 @@ repositories {
     maven{
         url "http://maven.appfoundry.be"
     }
+    maven {
+        url 'http://dl.bintray.com/amulyakhare/maven'
+    }
 }
 
 dependencies {
@@ -37,4 +40,6 @@ dependencies {
     compile 'com.jjoe64:graphview:4.2.1'
     compile 'com.github.lecho:hellocharts-library:1.5.8@aar'
     compile 'com.facebook.stetho:stetho:1.4.1'
+    compile 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
+    compile 'com.marvinlabs:android-slideshow-widget:0.4.+@aar'
 }

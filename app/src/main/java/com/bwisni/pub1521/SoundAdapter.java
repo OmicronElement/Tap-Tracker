@@ -37,12 +37,6 @@ public class SoundAdapter extends ArrayAdapter {
         assert sound != null;
         String title = sound.getTitle();
 
-        if(title == null){
-            Ringtone ringtone = RingtoneManager.getRingtone(getContext(), sound.getUri());
-            title = ringtone.getTitle(getContext());
-            ringtone.stop();
-        }
-
         // Lookup view
         TextView tv = (TextView) convertView.findViewById(android.R.id.text1);
         // Populate the data into the template view using the data object

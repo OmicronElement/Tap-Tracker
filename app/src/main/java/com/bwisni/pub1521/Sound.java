@@ -19,7 +19,7 @@ public class Sound extends SugarRecord{
     @SuppressWarnings("unused")
     public Sound(){}
 
-    Sound(Context context, Uri uri){
+    public Sound(Context context, Uri uri){
         uriString = uri.toString();
         title = generateTitle(context);
     }
@@ -36,7 +36,7 @@ public class Sound extends SugarRecord{
         return title;
     }
 
-    Uri getUri() {
+    public Uri getUri() {
         return Uri.parse(uriString);
     }
 
