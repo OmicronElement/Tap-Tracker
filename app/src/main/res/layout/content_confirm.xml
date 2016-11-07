@@ -4,69 +4,79 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="48dp"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.bwisni.pub1521.ConfirmActivity"
     tools:showIn="@layout/activity_confirm"
-    android:theme="@style/AppTheme">
+    android:theme="@style/AppTheme"
+    android:padding="@dimen/activity_vertical_margin">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="New Text"
-        android:id="@+id/drinkerConfirmName"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="@dimen/abc_text_size_display_3_material"
-        android:alpha="1"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
-
-
-    <TextSwitcher
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/drinkerConfirmCredits"
-        android:layout_gravity="right"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/drinkerConfirmName" />
-
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/creditsString"
-        android:id="@+id/creditsString"
-        android:layout_gravity="right"
-        android:textSize="@dimen/abc_text_size_display_2_material"
-        android:layout_below="@+id/drinkerConfirmCredits"
-        android:layout_centerHorizontal="true" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@+id/pieLayout">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/creditsString"
+            android:id="@+id/creditsString"
+            android:layout_gravity="right"
+            android:textSize="@dimen/abc_text_size_display_2_material"
+            android:layout_below="@+id/drinkerConfirmCredits"
+            android:layout_centerHorizontal="true" />
+
+        <TextSwitcher
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/drinkerConfirmCredits"
+            android:layout_gravity="right"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:id="@+id/drinkerConfirmName"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="@dimen/abc_text_size_display_3_material"
+            android:alpha="1"
+            android:layout_above="@+id/drinkerConfirmCredits"
+            android:layout_centerHorizontal="true" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_toEndOf="@+id/creditsString"
-        android:layout_marginBottom="@dimen/dialoguePad">
-
-        <ImageView
-            android:id="@+id/user_icon"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true"
-            android:layout_width="90dp"
-            android:layout_height="90dp" />
+        android:layout_alignParentBottom="true"
+        android:id="@+id/pieLayout"
+        android:layout_width="350dp">
 
         <lecho.lib.hellocharts.view.PieChartView
-            android:layout_height="@dimen/pieChartWidth"
+            android:layout_height="match_parent"
             android:id="@+id/userPieChart"
             android:visibility="visible"
             android:cursorVisible="false"
-            android:layout_width="@dimen/pieChartWidth"
-            android:layout_centerInParent="true"
-            android:alpha=".75" />
+            android:layout_width="match_parent"
+            android:alpha=".75"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentBottom="true" />
+
+        <ImageView
+            android:id="@+id/user_icon"
+            android:layout_centerInParent="false"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_width="125dp"
+            android:layout_height="125dp" />
+
     </RelativeLayout>
 
 </RelativeLayout>

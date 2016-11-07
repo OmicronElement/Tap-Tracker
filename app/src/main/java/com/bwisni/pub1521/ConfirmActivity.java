@@ -29,6 +29,8 @@ import lecho.lib.hellocharts.model.SliceValue;
 import lecho.lib.hellocharts.view.PieChartView;
 
 public class ConfirmActivity extends AppCompatActivity {
+    private final static int FINISH_DELAY_MILLIS = 10000;
+
     @Bind(R.id.drinkerConfirmName) TextView nameTextView;
     @Bind(R.id.drinkerConfirmCredits) TextSwitcher creditsTextView;
     @Bind(R.id.userPieChart) PieChartView pieChartView;
@@ -52,25 +54,7 @@ public class ConfirmActivity extends AppCompatActivity {
         Intent intent = getIntent();
         final Context context = getApplicationContext();
 
-        // specify the in/out animations you wish to use
-        //creditsTextView.setInAnimation(context, android.support.design.R.anim.abc_fade_in);
-
-        creditsTextView.setFactory(new ViewSwitcher.ViewFactory() {
-
-            public View makeView() {
-                TextView myText = new TextView(context);
-                myText.setGravity(Gravity.CENTER);
-
-                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER);
-                myText.setLayoutParams(params);
-
-                myText.setTextSize(112);
-                myText.setTextColor(MainActivity.mAccentColor);
-                return myText;
-            }
-        });
+        initTextSwitcher(context);
 
         drinker = (Drinker) intent.getSerializableExtra("drinker");
         position = intent.getIntExtra("drinkerPosition", 0);
@@ -80,15 +64,10 @@ public class ConfirmActivity extends AppCompatActivity {
         nfcId = drinker.getNfcId();
 
         drawPieChart();
+        buildIcon();
 
         nameTextView.setText(name);
-        creditsTextView.setText(Integer.toString(drinker.getCredits()));
-
-        TextDrawable drawable = TextDrawable.builder()
-                .buildRound(drinker.getShortName(), drinker.getColor());
-
-        ImageView image = (ImageView) findViewById(R.id.user_icon);
-        image.setImageDrawable(drawable);
+        creditsTextView.setCurrentText(Integer.toString(drinker.getCredits()));
 
         if(adminMode){
             // Execute after .5 seconds
@@ -110,6 +89,40 @@ public class ConfirmActivity extends AppCompatActivity {
         }
     }
 
+    private void initTextSwitcher(final Context context) {
+        // specify the in/out animations you wish to use
+        //creditsTextView.setInAnimation(context, android.support.design.R.anim.abc_fade_in);
+        creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_top);
+
+        creditsTextView.setFactory(new ViewSwitcher.ViewFactory() {
+
+            public View makeView() {
+                TextView myText = new TextView(context);
+                myText.setGravity(Gravity.CENTER);
+
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER);
+                myText.setLayoutParams(params);
+
+                myText.setTextSize(112);
+                myText.setTextColor(MainActivity.mAccentColor);
+                return myText;
+            }
+        });
+    }
+
+    private void buildIcon() {
+        TextDrawable drawable = TextDrawable.builder()
+                .beginConfig()
+                    .bold()
+                .endConfig()
+                .buildRound(drinker.getShortName(), drinker.getColor());
+
+        ImageView image = (ImageView) findViewById(R.id.user_icon);
+        image.setImageDrawable(drawable);
+    }
+
     private void drawPieChart() {
         dailyStatList = new ArrayList<>(DailyStat.find(DailyStat.class,"NFC_ID = ?", nfcId));
 
@@ -121,8 +134,6 @@ public class ConfirmActivity extends AppCompatActivity {
         pieChartData.setValueLabelsTextColor(Color.BLACK);
         pieChartData.setHasCenterCircle(true);
         pieChartData.setCenterCircleScale(0.425f);
-        pieChartData.setValueLabelBackgroundEnabled(false);
-
         pieChartView.setPieChartData(pieChartData);
     }
 
@@ -145,7 +156,6 @@ public class ConfirmActivity extends AppCompatActivity {
         playMedia(R.raw.chaching);
 
         drinker.setCredits(drinker.getCredits()+6);
-        creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_top);
         creditsTextView.setText(Integer.toString(drinker.getCredits()));
 
         // Execute after 1 second
@@ -171,7 +181,7 @@ public class ConfirmActivity extends AppCompatActivity {
                 public void run() {
                     finishActivityNoCredits();
                 }
-            }, 2000);
+            }, FINISH_DELAY_MILLIS);
         }
         else {
 
@@ -186,7 +196,7 @@ public class ConfirmActivity extends AppCompatActivity {
                 public void run() {
                     finishActivity();
                 }
-            }, 2000);
+            }, FINISH_DELAY_MILLIS);
         }
 
 

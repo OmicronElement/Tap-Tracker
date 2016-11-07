@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -31,7 +33,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.AnimationUtils;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -112,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
     protected static int defaultSoundIndex = 0;
     protected static int mAccentColor;
     protected static int mTextColor;
-    private static ColorGenerator generator = ColorGenerator.MATERIAL;
 
     @Bind(R.id.drinkersListView)
     ListView drinkersListView;
@@ -199,10 +203,19 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        mViewFlipper.setInAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.support.design.R.anim.abc_grow_fade_in_from_bottom));
-        mViewFlipper.setOutAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.support.design.R.anim.abc_fade_out));
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator());
+        fadeIn.setDuration(3000);
+
+        Animation fadeOut = new AlphaAnimation(1, 0);
+        fadeOut.setInterpolator(new AccelerateInterpolator());
+        fadeOut.setStartOffset(3000);
+        fadeOut.setDuration(3000);
+
+        mViewFlipper.setInAnimation(fadeIn);
+        mViewFlipper.setOutAnimation(fadeOut);
         mViewFlipper.setAutoStart(true);
-        mViewFlipper.setFlipInterval(10000);
+        mViewFlipper.setFlipInterval(25000);
         mViewFlipper.startFlipping();
     }
 
@@ -522,8 +535,8 @@ public class MainActivity extends AppCompatActivity {
         pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
             @Override
             public void onValueSelected(int arcIndex, SliceValue value) {
-                String s = String.valueOf(value.getLabelAsChars()) + ": "
-                        + String.valueOf((int) value.getValue()) + " pours";
+                String name = String.valueOf(value.getLabelAsChars());
+                String s = name + ": " + String.valueOf((int) value.getValue()) + " pours";
                 Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
             }
 
@@ -1036,6 +1049,14 @@ public class MainActivity extends AppCompatActivity {
                         "com.bwisni.pub1521.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                // Correct permissions for older APIs. Thanks limlim stackoverflow.com
+                List<ResolveInfo> resInfoList = getApplicationContext().getPackageManager()
+                        .queryIntentActivities(takePictureIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    getApplicationContext().grantUriPermission(packageName, photoURI,
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
                 startActivityForResult(takePictureIntent, CAMERA_REQ_CODE);
             }
         }

@@ -12,7 +12,6 @@ public class DailyStat extends SugarRecord {
     private String name;
     private String nfcId;
     private long date;
-    private int color;
 
     // Default constructor for SugarRecord
     @SuppressWarnings("unused")
@@ -24,15 +23,6 @@ public class DailyStat extends SugarRecord {
         this.name = drinker.getName();
         this.nfcId = drinker.getNfcId();
         this.numPours = numPours;
-        this.color = drinker.getColor();
-    }
-
-    public int getColor() {
-        return color;
-    }
-
-    public void setColor(int color) {
-        this.color = color;
     }
 
     public long getDate() {
