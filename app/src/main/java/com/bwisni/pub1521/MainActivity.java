@@ -212,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
         fadeOut.setStartOffset(3000);
         fadeOut.setDuration(3000);
 
+
         mViewFlipper.setInAnimation(fadeIn);
         mViewFlipper.setOutAnimation(fadeOut);
         mViewFlipper.setAutoStart(true);
@@ -696,7 +697,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             adminMode = true;
             kegEditText.setText(String.valueOf(kegCounter));
-            kegEditText.setSelection(kegEditText.getText().length());
+            //kegEditText.setSelection(kegEditText.getText().length());
+
             slideToTop(adminLayout);
         }
     }
@@ -915,12 +917,7 @@ public class MainActivity extends AppCompatActivity {
             soundsListView.invalidateViews();
         }
         if (requestCode == CAMERA_REQ_CODE && resultCode == RESULT_OK && intent != null) {
-            Bundle extras = intent.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            ImageView imageView = new ImageView(this);
-            imageView.setImageBitmap(imageBitmap);
-            mViewFlipper.addView(imageView);
-            mViewFlipper.startFlipping();
+           initSlideshow();
         }
 
         saveSharedPrefs();

@@ -12,7 +12,10 @@
     tools:context="com.bwisni.pub1521.MainActivity"
     android:background="@color/background_material_dark"
     android:orientation="vertical"
-    tools:showIn="@layout/activity_main">
+    tools:showIn="@layout/activity_main"
+    android:focusable="true"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true">
 
     <GridLayout
         android:layout_width="wrap_content"
@@ -73,7 +76,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="490dp"
-        android:layout_below="@+id/gridLayout">
+        android:layout_below="@+id/gridLayout"
+        >
 
         <pl.droidsonroids.gif.GifTextView
             android:layout_width="fill_parent"
