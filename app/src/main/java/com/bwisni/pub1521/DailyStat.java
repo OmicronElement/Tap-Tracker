@@ -11,25 +11,25 @@ public class DailyStat extends SugarRecord {
     private int numPours;
     private String name;
     private String nfcId;
-    private long date;
+    private String date;
 
     // Default constructor for SugarRecord
     @SuppressWarnings("unused")
     public DailyStat() {
     }
 
-    public DailyStat(long date, Drinker drinker, int numPours) {
+    public DailyStat(String date, Drinker drinker, int numPours) {
         this.date = date;
         this.name = drinker.getName();
         this.nfcId = drinker.getNfcId();
         this.numPours = numPours;
     }
 
-    public long getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(long date) {
+    public void setDate(String date) {
         this.date = date;
     }
 
@@ -45,17 +45,6 @@ public class DailyStat extends SugarRecord {
         return name;
     }
 
-    public String getShortName() {
-        int breakIndex = name.indexOf(' ');
-        if(breakIndex != -1) {
-            String shortName = name.substring(0, breakIndex);
-            return shortName;
-        }
-        else {
-            return name;
-        }
-    }
-
     public void setName(String name) {
         this.name = name;
     }
@@ -68,7 +57,7 @@ public class DailyStat extends SugarRecord {
         this.numPours = numPours;
     }
 
-    public void addDrink() {
+    public void addPour() {
         numPours++;
     }
 }

@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -51,7 +52,6 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 import android.widget.ViewSwitcher;
 
-import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.facebook.stetho.Stetho;
 import com.orm.SugarContext;
 
@@ -108,15 +108,17 @@ public class MainActivity extends AppCompatActivity {
     //protected static final int ONE_DAY_MS = (1000 * 60 * 60 * 24);
     protected static final int BEERS_IN_KEG = 165;
     protected static final int KEG_LOW_VALUE = 25;
-    protected static final int KEG_BG_COLOR = Color.parseColor("#000000");
-    protected static final int KEG_COLOR = Color.parseColor("#707070");
-    protected static final int KEG_LOW_COLOR = Color.parseColor("#ff0000");
+    protected static final int KEG_BG_COLOR = Color.BLACK;
+    protected static final int KEG_LOW_COLOR = Color.RED;
     protected static final int GRAPH_VIEWPORT_DAYS = 7;
     protected static final int GRAPH_VIEWPORT_MAX_Y = 50;
+    public static final int DEFAULT_CREDITS_REFILL = 6;
+    public static final int SLIDESHOW_INTERVAL = 25000;
 
-    protected static int defaultSoundIndex = 0;
+    protected static int defaultSoundIndex;
     protected static int mAccentColor;
     protected static int mTextColor;
+    protected static int kegColor;
 
     @Bind(R.id.drinkersListView)
     ListView drinkersListView;
@@ -137,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.pieChart)
     PieChartView pieChart;
     @Bind(R.id.slideshow)
-    ViewFlipper mViewFlipper;
+    ViewFlipper slideshow;
 
     @Bind(R.id.fab)
     FloatingActionButton fab;
@@ -145,20 +147,19 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Drinker> drinkersArrayList;
     private Map<String, Drinker> drinkers;
     private Map<String, DailyStat> dailyStats;
-    private Map<Long, ArrayList<Integer>> dailyTotals;
+    private Map<String, ArrayList<Integer>> dailyTotals;
     private static ArrayList<Sound> soundsList;
     private PieChartData pieChartData;
     private long totalServed;
     private int kegCounter;
     private boolean adminMode = false;
 
-    private long pieChartDate;
+    private String dateToday;
 
     private PendingIntent pendingIntent;
     private IntentFilter[] mIntentFilters;
     private String[][] mTechLists;
     private NfcAdapter mNfcAdapter;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,12 +178,6 @@ public class MainActivity extends AppCompatActivity {
 
         loadData();
 
-        for(Drinker d : drinkersArrayList){
-            ColorGenerator generator = ColorGenerator.MATERIAL;
-            d.setColor(generator.getColor(d.getNfcId()));
-            d.save();
-        }
-
         initNfc();
         initColors();
         initTextSwitcher();
@@ -196,6 +191,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void initSlideshow() {
         File root = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        slideshow.removeAllViews();
+        slideshow.invalidate();
 
         if (root != null) {
             for (final File fileEntry : root.listFiles()) {
@@ -213,16 +211,15 @@ public class MainActivity extends AppCompatActivity {
         fadeOut.setDuration(3000);
 
 
-        mViewFlipper.setInAnimation(fadeIn);
-        mViewFlipper.setOutAnimation(fadeOut);
-        mViewFlipper.setAutoStart(true);
-        mViewFlipper.setFlipInterval(25000);
-        mViewFlipper.startFlipping();
+        slideshow.setInAnimation(fadeIn);
+        slideshow.setOutAnimation(fadeOut);
+        slideshow.setFlipInterval(SLIDESHOW_INTERVAL);
+        slideshow.startFlipping();
     }
 
     private void addPicToSlideshow(String photoPath) {
+        slideshow.setMeasureAllChildren(true);
         // Get the dimensions of the View
-        mViewFlipper.setMeasureAllChildren(true);
         int targetW = 250;
         int targetH = 140;
 
@@ -243,8 +240,7 @@ public class MainActivity extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeFile(photoPath, bmOptions);
         ImageView IV = new ImageView(this);
         IV.setImageBitmap(bitmap);
-        mViewFlipper.addView(IV);
-        mViewFlipper.startFlipping();
+        slideshow.addView(IV);
     }
 
 
@@ -261,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
     private void initColors() {
         mAccentColor = getResources().getColor(R.color.colorAccent);
         mTextColor = getResources().getColor(android.R.color.primary_text_dark);
+        kegColor = getResources().getColor(android.R.color.tertiary_text_dark);
     }
 
     private void checkPermissions() {
@@ -276,16 +273,18 @@ public class MainActivity extends AppCompatActivity {
 
     public static Uri getSound() {
         // Play fun sounds randomly, otherwise use default sound
-        int oneIn = 5;
+        int oneIn = 3;
         Random rand = new Random();
         int value = rand.nextInt(oneIn);
 
         Log.i("RNG", "Random generated: " + value);
 
+        int nextRand = -1;
         int size = soundsList.size();
         if (value == oneIn - 1 && size > 0) {
-            value = rand.nextInt(size);
-            return soundsList.get(value).getUri();
+            while (nextRand != defaultSoundIndex)
+                nextRand = rand.nextInt(size);
+            return soundsList.get(nextRand).getUri();
         } else return soundsList.get(defaultSoundIndex).getUri();
     }
 
@@ -344,8 +343,8 @@ public class MainActivity extends AppCompatActivity {
         List<AxisValue> axisValues = new ArrayList<>();
 
         int x = 0;
-        for (Long date : dailyTotals.keySet()) {
-            String dateString = getDateString(date);
+        for (String date : dailyTotals.keySet()) {
+            String dateString = date;
             AxisValue axisValue = new AxisValue(x);
             axisValue.setLabel(dateString);
             axisValues.add(axisValue);
@@ -415,8 +414,8 @@ public class MainActivity extends AppCompatActivity {
 
         generateDailyTotals(dailyStats);
 
-        for (Long l : dailyTotals.keySet()) {
-            ArrayList<Integer> arrayList = dailyTotals.get(l);
+        for (String s : dailyTotals.keySet()) {
+            ArrayList<Integer> arrayList = dailyTotals.get(s);
             List<SubcolumnValue> subcolumnValues = new ArrayList<>();
             for (Integer integer : arrayList) {
                 SubcolumnValue sc = new SubcolumnValue(integer);
@@ -497,7 +496,7 @@ public class MainActivity extends AppCompatActivity {
         bg.setColor(KEG_BG_COLOR);
 
         if (kegCounter > KEG_LOW_VALUE) {
-            sc.setColor(KEG_COLOR);
+            sc.setColor(kegColor);
         } else {
             sc.setColor(KEG_LOW_COLOR);
         }
@@ -560,7 +559,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Add a slice for each entry in dailyStats
         for (DailyStat ds : dailyStats.values()) {
-            SliceValue sv = new SliceValue(ds.getNumPours(), KEG_COLOR);
+            SliceValue sv = new SliceValue(ds.getNumPours(), kegColor);
 
             Drinker drinker = drinkers.get(ds.getNfcId());
             sv.setLabel(drinker.getShortName());
@@ -580,7 +579,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Load data for daily pie chart
-        List<DailyStat> dsList = DailyStat.find(DailyStat.class, "date = ?", Long.toString(getDate()));
+        List<DailyStat> dsList = DailyStat.find(DailyStat.class, "date = ?", getDateString());
         dailyStats = new HashMap<>();
         for (DailyStat ds : dsList) {
             dailyStats.put(ds.getNfcId(), ds);
@@ -600,9 +599,9 @@ public class MainActivity extends AppCompatActivity {
         // Shared Preferences
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         totalServed = sharedPref.getLong("totalServed", 32800);
-        pieChartDate = sharedPref.getLong("pieChartDate", getDate());
+        dateToday = sharedPref.getString("pieChartDateString", "00/00/00");
         kegCounter = sharedPref.getInt("kegCounter", BEERS_IN_KEG - 1);
-        defaultSoundIndex = sharedPref.getInt("defaultSoundIndex", defaultSoundIndex);
+        defaultSoundIndex = sharedPref.getInt("defaultSoundIndex", 0);
 
         Log.i("kegCounter", Integer.toString(kegCounter));
     }
@@ -612,7 +611,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putLong("totalServed", totalServed);
-        editor.putLong("pieChartDate", pieChartDate);
+        editor.putString("pieChartDateString", dateToday);
         editor.putInt("kegCounter", kegCounter);
         editor.putInt("defaultSoundIndex", defaultSoundIndex);
         editor.apply();
@@ -629,12 +628,6 @@ public class MainActivity extends AppCompatActivity {
         // Reduce keg counter
         if (kegCounter > 0)
             kegCounter--;
-
-/*        // Find DatePoint for today and increment
-        List<DatePoint> dpList = DatePoint.find(DatePoint.class, "date = ?", Long.toString(getDate()));
-        DatePoint dp = dpList.get(0);
-        dp.addDrink();
-        dp.save();*/
 
         updateGraph();
         updateKegGraph();
@@ -655,17 +648,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void increaseDailyStat(Drinker drinker) {
         // Start a new chart if it's a new day
-        if (pieChartDate < getDate()) {
-            pieChartDate = getDate();
+        if (!dateToday.equals(getDateString())) {
+            dateToday = getDateString();
             dailyStats = new HashMap<>();
         }
 
         DailyStat ds;
         if (dailyStats.containsKey(drinker.getNfcId())) {
             ds = dailyStats.get(drinker.getNfcId());
-            ds.addDrink();
+            ds.addPour();
         } else {
-            ds = new DailyStat(getDate(), drinker, 1);
+            ds = new DailyStat(getDateString(), drinker, 1);
             dailyStats.put(drinker.getNfcId(), ds);
         }
         ds.save();
@@ -750,8 +743,14 @@ public class MainActivity extends AppCompatActivity {
         return calendar.getTimeInMillis();
     }
 
-    protected static String getDateString(long x) {
-        Date date = new Date(x);
+    protected String getDateString() {
+        Date date = new Date(getDate());
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy", Locale.US);
+        return sdf.format(date);
+    }
+
+    protected String getDateString(long l) {
+        Date date = new Date(l);
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy", Locale.US);
         return sdf.format(date);
     }
@@ -863,8 +862,8 @@ public class MainActivity extends AppCompatActivity {
             String name = intent.getStringExtra("name");
             String nfcId = intent.getStringExtra("nfcId");
 
-            // Start with 6 credits
-            addDrinker(name, 6, nfcId);
+            // Start with DEFAULT_CREDITS_REFILL credits
+            addDrinker(name, DEFAULT_CREDITS_REFILL, nfcId);
         }
         // Returning from Edit Drinker
         if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_OK && intent != null) {
@@ -890,12 +889,14 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == CONFIRM_REQ_CODE && resultCode == RESULT_OK && intent != null) {
             Log.i("onActivityResult", "RESULT_OK");
             int position = intent.getIntExtra("drinkerPosition", -1);
+            int color = ((Drinker) intent.getSerializableExtra("drinker")).getColor();
 
             Drinker drinker = drinkersArrayList.get(position);
 
+            drinker.setColor(color);
             // If admin, add credits, else use one
             if (adminMode) {
-                drinker.setCredits(drinker.getCredits() + 6);
+                drinker.setCredits(drinker.getCredits() + DEFAULT_CREDITS_REFILL);
             } else {
                 drinker.subtractCredit();
                 increaseTotalServed();
@@ -916,8 +917,10 @@ public class MainActivity extends AppCompatActivity {
             newSound.save();
             soundsListView.invalidateViews();
         }
-        if (requestCode == CAMERA_REQ_CODE && resultCode == RESULT_OK && intent != null) {
-           initSlideshow();
+        if (requestCode == CAMERA_REQ_CODE && resultCode == RESULT_OK) {
+            initSlideshow();
+            slideshow.setDisplayedChild(slideshow.getChildCount()-1);
+            Log.d("CAMERA", "result_ok");
         }
 
         saveSharedPrefs();
@@ -991,7 +994,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         saveSharedPrefs();
-        mViewFlipper.stopFlipping();
+        slideshow.stopFlipping();
     }
 
     public void onResume() {
@@ -1008,12 +1011,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Thanks tibox stackoverflow.com
+    private int getMatColor(String typeColor)
+    {
+        int returnColor = Color.BLACK;
+        int arrayId = getResources().getIdentifier("mdcolor_" + typeColor, "array", getApplicationContext().getPackageName());
+
+        if (arrayId != 0)
+        {
+            TypedArray colors = getResources().obtainTypedArray(arrayId);
+            int index = (int) (Math.random() * colors.length());
+            returnColor = colors.getColor(index, Color.BLACK);
+            colors.recycle();
+        }
+        return returnColor;
+    }
 
     String mCurrentPhotoPath;
 
     private File createImageFile() throws IOException {
         // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(

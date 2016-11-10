@@ -42,4 +42,5 @@ dependencies {
     compile 'com.facebook.stetho:stetho:1.4.1'
     compile 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
     compile 'com.marvinlabs:android-slideshow-widget:0.4.+@aar'
+    compile 'com.thebluealliance:spectrum:0.6.0'
 }

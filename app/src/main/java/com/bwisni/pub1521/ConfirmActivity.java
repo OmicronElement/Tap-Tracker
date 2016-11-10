@@ -3,11 +3,13 @@ package com.bwisni.pub1521;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.ColorInt;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
@@ -18,18 +20,20 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import com.amulyakhare.textdrawable.TextDrawable;
+import com.thebluealliance.spectrum.SpectrumDialog;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import lecho.lib.hellocharts.model.PieChartData;
 import lecho.lib.hellocharts.model.SliceValue;
 import lecho.lib.hellocharts.view.PieChartView;
 
 public class ConfirmActivity extends AppCompatActivity {
-    private final static int FINISH_DELAY_MILLIS = 10000;
+    private final static int FINISH_DELAY_MILLIS = 6000;
 
     @Bind(R.id.drinkerConfirmName) TextView nameTextView;
     @Bind(R.id.drinkerConfirmCredits) TextSwitcher creditsTextView;
@@ -56,6 +60,7 @@ public class ConfirmActivity extends AppCompatActivity {
 
         initTextSwitcher(context);
 
+        // Assign values
         drinker = (Drinker) intent.getSerializableExtra("drinker");
         position = intent.getIntExtra("drinkerPosition", 0);
         boolean adminMode = intent.getBooleanExtra("adminMode", false);
@@ -63,6 +68,7 @@ public class ConfirmActivity extends AppCompatActivity {
         String name = drinker.getName();
         nfcId = drinker.getNfcId();
 
+        // Init drawables
         drawPieChart();
         buildIcon();
 
@@ -70,7 +76,7 @@ public class ConfirmActivity extends AppCompatActivity {
         creditsTextView.setCurrentText(Integer.toString(drinker.getCredits()));
 
         if(adminMode){
-            // Execute after .5 seconds
+ // Execute after .5 seconds
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -91,7 +97,7 @@ public class ConfirmActivity extends AppCompatActivity {
 
     private void initTextSwitcher(final Context context) {
         // specify the in/out animations you wish to use
-        //creditsTextView.setInAnimation(context, android.support.design.R.anim.abc_fade_in);
+        creditsTextView.setInAnimation(context, android.support.design.R.anim.abc_fade_in);
         creditsTextView.setOutAnimation(getApplicationContext(),android.support.design.R.anim.abc_slide_out_top);
 
         creditsTextView.setFactory(new ViewSwitcher.ViewFactory() {
@@ -143,7 +149,7 @@ public class ConfirmActivity extends AppCompatActivity {
         // Add a slice for each entry in dailyStats
         for (DailyStat ds : dailyStatList) {
             SliceValue sv = new SliceValue(ds.getNumPours(), Color.WHITE);
-            String date = MainActivity.getDateString(ds.getDate()).substring(0,5);
+            String date = ds.getDate().substring(0,5);
             sv.setLabel(date);
             values.add(sv);
         }
@@ -155,7 +161,7 @@ public class ConfirmActivity extends AppCompatActivity {
     private void addCredits(){
         playMedia(R.raw.chaching);
 
-        drinker.setCredits(drinker.getCredits()+6);
+        drinker.setCredits(drinker.getCredits()+MainActivity.DEFAULT_CREDITS_REFILL);
         creditsTextView.setText(Integer.toString(drinker.getCredits()));
 
         // Execute after 1 second
@@ -202,6 +208,22 @@ public class ConfirmActivity extends AppCompatActivity {
 
     }
 
+    private void showDialog() {
+        new SpectrumDialog.Builder(getApplicationContext())
+                .setColors(getMatColors("300"))
+                .setSelectedColor(drinker.getColor())
+                .setDismissOnColorSelected(true)
+                .setOutlineWidth(2)
+                .setOnColorSelectedListener(new SpectrumDialog.OnColorSelectedListener() {
+                    @Override public void onColorSelected(boolean positiveResult, @ColorInt int color) {
+                        if (positiveResult) {
+                            drinker.setColor(color);
+                            buildIcon();
+                        }
+                    }
+                }).build().show(getSupportFragmentManager(), "colorpicker");
+    }
+
     private void playPourSound() {
         playMedia(MainActivity.getSound());
     }
@@ -230,6 +252,27 @@ public class ConfirmActivity extends AppCompatActivity {
 
         setResult(RESULT_CANCELED, intent);
         finish();
+    }
+
+    public int[] getMatColors(String typeColor) {
+        // Grab material colors from resources
+        int arrayId = getResources().getIdentifier("mdcolor_" + typeColor, "array", getApplicationContext().getPackageName());
+        if (arrayId != 0) {
+            TypedArray colors = getResources().obtainTypedArray(arrayId);
+            int[] materialColors = new int[colors.length()];
+            for (int i = 0; i < colors.length(); i++) {
+                materialColors[i] = colors.getColor(i, MainActivity.mAccentColor);
+            }
+
+            colors.recycle();
+            return materialColors;
+        }
+        else return new int[(Color.BLACK)];
+    }
+
+    @OnClick(R.id.user_icon)
+    protected void onUserIconClick(View view){
+        showDialog();
     }
 
     @Override
