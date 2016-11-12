@@ -141,6 +141,21 @@ public class ConfirmActivity extends AppCompatActivity {
         pieChartData.setHasCenterCircle(true);
         pieChartData.setCenterCircleScale(0.425f);
         pieChartView.setPieChartData(pieChartData);
+
+        if(drinker.getCredits() != 0) {
+            List<SliceValue> values = pieChartData.getValues();
+            SliceValue sv = values.get(values.size() - 1);
+            // If we don't already have slice for today, add one and increase it
+            String today = MainActivity.getDateString().substring(0,5);
+            if (!String.valueOf(sv.getLabelAsChars()).equals(today)) {
+                values.add(new SliceValue(0, 0, Color.WHITE));
+                sv = values.get(values.size() - 1);
+                sv.setLabel(today);
+            }
+            sv.setTarget(sv.getValue() + 1);
+        }
+
+        pieChartView.startDataAnimation(2000);
     }
 
     private List<SliceValue> getPieChartData() {

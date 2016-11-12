@@ -1,21 +1,15 @@
 package com.bwisni.pub1521;
 
-import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.nfc.FormatException;
-import android.nfc.NfcAdapter;
-import android.nfc.tech.Ndef;
-import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
-
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import be.appfoundry.nfclibrary.activities.NfcActivity;
 import be.appfoundry.nfclibrary.exceptions.InsufficientCapacityException;
 import be.appfoundry.nfclibrary.exceptions.ReadOnlyTagException;
 import be.appfoundry.nfclibrary.exceptions.TagNotPresentException;
@@ -28,7 +22,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 
-public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCallback{
+public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
     @Bind(R.id.editTextCredit) EditText editTextCredit;
     @Bind(R.id.editNameTextView) EditText nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
@@ -36,20 +30,6 @@ public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCal
     private int position;
     private int credits;
     private String uuid;
-
-
-    private PendingIntent pendingIntent;
-    private IntentFilter[] mIntentFilters;
-    private String[][] mTechLists;
-    private NfcAdapter mNfcAdapter;
-
-    private void initNfc() {
-        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
-        mIntentFilters = new IntentFilter[]{new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED)};
-        mTechLists = new String[][]{new String[]{Ndef.class.getName()},
-                new String[]{NdefFormatable.class.getName()}};
-    }
 
     AsyncOperationCallback mAsyncOperationCallback = new AsyncOperationCallback() {
 
@@ -68,7 +48,6 @@ public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCal
         setTitle("Join the Party");
 
         ButterKnife.bind(this);
-        initNfc();
 
         Intent intent = getIntent();
 
@@ -171,20 +150,4 @@ public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCal
         //Toast.makeText(this,"error",Toast.LENGTH_SHORT).show();
         Log.e("NFC",e.getMessage());
     }
-
-    public void onResume(){
-        super.onResume();
-        if (mNfcAdapter != null) {
-            mNfcAdapter.enableForegroundDispatch(this, pendingIntent, mIntentFilters, mTechLists);
-        }
-    }
-
-    public void onPause(){
-        super.onPause();
-        if (mNfcAdapter != null)
-        {
-            mNfcAdapter.disableForegroundDispatch(this);
-        }
-    }
-
 }

@@ -23,7 +23,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -48,7 +50,6 @@ import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewFlipper;
 import android.widget.ViewSwitcher;
 
@@ -69,6 +70,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import be.appfoundry.nfclibrary.utilities.sync.NfcReadUtilityImpl;
 import butterknife.Bind;
@@ -77,6 +79,7 @@ import butterknife.OnClick;
 import butterknife.OnItemClick;
 import butterknife.OnItemLongClick;
 import butterknife.OnLongClick;
+import lecho.lib.hellocharts.listener.ComboLineColumnChartOnValueSelectListener;
 import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.AxisValue;
@@ -132,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
     EditText kegEditText;
     @Bind(R.id.AdminLayout)
     RelativeLayout adminLayout;
+    @Bind(R.id.coordinatorLayout)
+    CoordinatorLayout coordinatorLayout;
     @Bind(R.id.graph)
     ComboLineColumnChartView graph;
     @Bind(R.id.kegGraph)
@@ -144,22 +149,25 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.fab)
     FloatingActionButton fab;
 
+    private PendingIntent pendingIntent;
+    private IntentFilter[] mIntentFilters;
+    private String[][] mTechLists;
+    private NfcAdapter mNfcAdapter;
+
     private ArrayList<Drinker> drinkersArrayList;
     private Map<String, Drinker> drinkers;
     private Map<String, DailyStat> dailyStats;
-    private Map<String, ArrayList<Integer>> dailyTotals;
+    private Map<String, Integer> dailyTotals;
     private static ArrayList<Sound> soundsList;
     private PieChartData pieChartData;
+    private ColumnChartData kegGraphData;
+    private LineChartData lineChartData;
+    private ColumnChartData columnChartData;
     private long totalServed;
     private int kegCounter;
     private boolean adminMode = false;
 
     private String dateToday;
-
-    private PendingIntent pendingIntent;
-    private IntentFilter[] mIntentFilters;
-    private String[][] mTechLists;
-    private NfcAdapter mNfcAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -188,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
         initSounds();
         initSlideshow();
     }
+
 
     private void initSlideshow() {
         File root = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -226,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        BitmapFactory.decodeFile(photoPath, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
@@ -279,13 +288,16 @@ public class MainActivity extends AppCompatActivity {
 
         Log.i("RNG", "Random generated: " + value);
 
-        int nextRand = -1;
         int size = soundsList.size();
-        if (value == oneIn - 1 && size > 0) {
-            while (nextRand != defaultSoundIndex)
+        int nextRand = rand.nextInt(size);
+        if (value == oneIn - 1 && size > 1) {
+            while (nextRand == defaultSoundIndex) {
                 nextRand = rand.nextInt(size);
+            }
             return soundsList.get(nextRand).getUri();
-        } else return soundsList.get(defaultSoundIndex).getUri();
+        } else {
+            return soundsList.get(defaultSoundIndex).getUri();
+        }
     }
 
     private void initAdminTabs() {
@@ -336,17 +348,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initGraph() {
-        List<DailyStat> dailyStats = DailyStat.listAll(DailyStat.class);
-        ComboLineColumnChartData data = new ComboLineColumnChartData
-                (generateColumnData(dailyStats), generateLineData(dailyStats));
+        final List<DailyStat> allDailyStats = DailyStat.listAll(DailyStat.class);
 
-        List<AxisValue> axisValues = new ArrayList<>();
+        columnChartData = new ColumnChartData(generateColumnData(allDailyStats));
+        columnChartData.setStacked(false);
+
+        lineChartData = new LineChartData(generateLineData(allDailyStats));
+
+        ComboLineColumnChartData data = new ComboLineColumnChartData(columnChartData, lineChartData);
 
         int x = 0;
+        List<AxisValue> axisValues = new ArrayList<>();
         for (String date : dailyTotals.keySet()) {
-            String dateString = date;
             AxisValue axisValue = new AxisValue(x);
-            axisValue.setLabel(dateString);
+            axisValue.setLabel(date);
             axisValues.add(axisValue);
             x++;
         }
@@ -354,7 +369,6 @@ public class MainActivity extends AppCompatActivity {
         Axis axisX = new Axis(axisValues);
         Axis axisY = new Axis().setHasLines(true);
         //axisY.setName("Pours");
-
 
         data.setAxisXBottom(axisX);
         data.setAxisYLeft(axisY);
@@ -365,6 +379,24 @@ public class MainActivity extends AppCompatActivity {
 
         graph.setComboLineColumnChartData(data);
 
+        graph.setOnValueTouchListener(new ComboLineColumnChartOnValueSelectListener() {
+            @Override
+            public void onColumnValueSelected(int columnIndex, int subcolumnIndex, SubcolumnValue value) {
+                Set<String> dates = dailyTotals.keySet();
+                ArrayList<String> datesList = new ArrayList<>(dates);
+                setPieChartDate(datesList.get(columnIndex));
+            }
+
+            @Override
+            public void onPointValueSelected(int lineIndex, int pointIndex, PointValue value) {
+
+            }
+
+            @Override
+            public void onValueDeselected() {
+
+            }
+        });
         // Set viewport to last GRAPH_VIEWPORT_DAYS days
         graph.setHorizontalScrollBarEnabled(true);
         Viewport v = new Viewport(graph.getMaximumViewport());
@@ -380,11 +412,7 @@ public class MainActivity extends AppCompatActivity {
         generateDailyTotals(dailyStats);
 
         int i = 0;
-        for (ArrayList<Integer> arrayList : dailyTotals.values()) {
-            int total = 0;
-            for (Integer integer : arrayList) {
-                total += integer;
-            }
+        for (Integer total : dailyTotals.values()) {
             values.add(new PointValue(i, total));
             i++;
         }
@@ -392,24 +420,20 @@ public class MainActivity extends AppCompatActivity {
         return values;
     }
 
-    private void generateDailyTotals(List<DailyStat> dailyStats) {
+    private void generateDailyTotals(List<DailyStat> allDailyStats) {
         dailyTotals = new LinkedHashMap<>();
 
-        for (DailyStat ds : dailyStats) {
-            ArrayList<Integer> totalPoured = new ArrayList<>();
+        for (DailyStat ds : allDailyStats) {
+            int total = ds.getNumPours();
             if (dailyTotals.containsKey(ds.getDate())) {
-                totalPoured = dailyTotals.get(ds.getDate());
-                totalPoured.add(ds.getNumPours());
-                dailyTotals.put(ds.getDate(), totalPoured);
-            } else {
-                totalPoured.add(ds.getNumPours());
-                dailyTotals.put(ds.getDate(), totalPoured);
+                total += dailyTotals.get(ds.getDate());
             }
+            dailyTotals.put(ds.getDate(), total);
         }
     }
 
 
-    private ColumnChartData generateStackedColumnData(List<DailyStat> dailyStats) {
+/*    private ColumnChartData generateStackedColumnData(List<DailyStat> dailyStats) {
         ArrayList<Column> columns = new ArrayList<>();
 
         generateDailyTotals(dailyStats);
@@ -431,12 +455,12 @@ public class MainActivity extends AppCompatActivity {
         ColumnChartData columnChartData = new ColumnChartData(columns);
         columnChartData.setStacked(true);
         return columnChartData;
-    }
+    }*/
 
-    private ColumnChartData generateColumnData(List<DailyStat> dailyStats) {
+    private ArrayList<Column> generateColumnData(List<DailyStat> allDailyStats) {
         ArrayList<Column> columns = new ArrayList<>();
 
-        for (PointValue pv : getGraphDataFromDailyStats(dailyStats)) {
+        for (PointValue pv : getGraphDataFromDailyStats(allDailyStats)) {
             ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
             SubcolumnValue sc = new SubcolumnValue(pv.getY());
             sc.setColor(mAccentColor);
@@ -447,14 +471,12 @@ public class MainActivity extends AppCompatActivity {
             //c.setHasLabelsOnlyForSelected(true);
             columns.add(c);
         }
-        ColumnChartData columnChartData = new ColumnChartData(columns);
-        columnChartData.setStacked(false);
-        return columnChartData;
+
+        return columns;
     }
 
-    private LineChartData generateLineData(List<DailyStat> dailyStats) {
-
-        Line line = new Line(getGraphDataFromDailyStats(dailyStats));
+    private List<Line> generateLineData(List<DailyStat> allDailyStats) {
+        Line line = new Line(getGraphDataFromDailyStats(allDailyStats));
         line.setColor(Color.WHITE);
         line.setCubic(true);
         line.setHasLines(true);
@@ -464,27 +486,51 @@ public class MainActivity extends AppCompatActivity {
         List<Line> lines = new ArrayList<>();
         lines.add(line);
 
-        return new LineChartData(lines);
+        return lines;
     }
 
     private void updateGraph() {
-        initGraph();
+        loadDailyStats(getDateString());
+        Line line = lineChartData.getLines().get(0);
+        List<PointValue> pointValues = line.getValues();
+        PointValue lastPointValue = pointValues.get(pointValues.size()-1);
+        lastPointValue.setTarget(lastPointValue.getX(), lastPointValue.getY()+1);
+
+
+        List<Column> columns = columnChartData.getColumns();
+        Column column = columns.get(pointValues.size()-1);
+        SubcolumnValue lastSubcolumnValue = column.getValues().get(0);
+        lastSubcolumnValue.setTarget(lastSubcolumnValue.getValue()+1);
+        graph.startDataAnimation(3000);
     }
 
     private void initKegGraph() {
+        kegGraphData = new ColumnChartData(generateKegData());
+        kegGraphData.setFillRatio(1);
+        kegGraphData.setStacked(true);
+
         kegGraph.setZoomEnabled(false);
         kegGraph.setBackgroundColor(KEG_BG_COLOR);
-
-        kegGraph.setColumnChartData(generateKegData());
+        kegGraph.setColumnChartData(kegGraphData);
     }
 
     private void updateKegGraph() {
-        initKegGraph();
+        List<Column> columns = kegGraphData.getColumns();
+        Column column = columns.get(0);
+        SubcolumnValue sc = column.getValues().get(0);
+        SubcolumnValue bg = column.getValues().get(1);
+
+        sc.setValue(0);
+        bg.setValue(BEERS_IN_KEG);
+
+        sc.setTarget(kegCounter);
+        bg.setTarget(BEERS_IN_KEG - kegCounter);
+
+        kegGraph.startDataAnimation(2000);
     }
 
-    private ColumnChartData generateKegData() {
+    private ArrayList<Column> generateKegData() {
         ArrayList<Column> columns = new ArrayList<>();
-        ColumnChartData columnChartData = new ColumnChartData();
 
         ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
         SubcolumnValue sc = new SubcolumnValue(kegCounter);
@@ -501,18 +547,14 @@ public class MainActivity extends AppCompatActivity {
             sc.setColor(KEG_LOW_COLOR);
         }
 
-        subcolumnValues.add(sc);
-        subcolumnValues.add(bg);
+        subcolumnValues.add(0, sc);
+        subcolumnValues.add(1, bg);
 
         Column c = new Column(subcolumnValues);
         c.setHasLabels(false);
         columns.add(c);
 
-        columnChartData.setColumns(columns);
-        columnChartData.setFillRatio(1);
-        columnChartData.setStacked(true);
-
-        return columnChartData;
+        return columns;
     }
 
     private void initPieChart() {
@@ -523,21 +565,21 @@ public class MainActivity extends AppCompatActivity {
         //pieChartData.setHasLabelsOutside(false);
         pieChartData.setHasCenterCircle(true);
         pieChartData.setCenterCircleScale(0.375f);
-        pieChartData.setCenterText1("Today's");
+        pieChartData.setCenterText2("Today");
         pieChartData.setCenterText1FontSize(13);
         pieChartData.setCenterText1Color(Color.WHITE);
-        pieChartData.setCenterText2("Pours");
+        pieChartData.setCenterText1("Pours");
         pieChartData.setCenterText2FontSize(13);
         pieChartData.setCenterText2Color(Color.WHITE);
 
-        // Create a Toast showing number of pours when users slice is touched
+        // Create a Snackbar showing number of pours when users slice is touched
         pieChart.setValueTouchEnabled(true);
         pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
             @Override
             public void onValueSelected(int arcIndex, SliceValue value) {
                 String name = String.valueOf(value.getLabelAsChars());
                 String s = name + ": " + String.valueOf((int) value.getValue()) + " pours";
-                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+                Snackbar.make(coordinatorLayout, s, Snackbar.LENGTH_SHORT).show();
             }
 
             @Override
@@ -549,24 +591,48 @@ public class MainActivity extends AppCompatActivity {
         pieChart.setPieChartData(pieChartData);
     }
 
-    private void updatePieChart() {
-        pieChartData.setValues(getPieChartData());
-        pieChart.startDataAnimation();
+    private void setPieChartDate(String date) {
+        loadDailyStats(date);
+
+        List<SliceValue> values = pieChartData.getValues();
+        for (Drinker drinker : drinkersArrayList) {
+            SliceValue sv = values.get(drinkersArrayList.indexOf(drinker));
+            // If we have a daily stat today for a given drinker, set target to new value
+            if(dailyStats.containsKey(drinker.getNfcId())) {
+                DailyStat dailyStat = dailyStats.get(drinker.getNfcId());
+                sv.setLabel(drinker.getShortName());
+                sv.setTarget(dailyStat.getNumPours());
+            } else { // Otherwise hide their slice
+                sv.setLabel("");
+                sv.setTarget(0);
+            }
+        }
+        pieChart.startDataAnimation(2000);
+
+        if(!date.equals(dateToday))
+            pieChartData.setCenterText2(date);
+        else
+            pieChartData.setCenterText2("Today");
     }
 
     private List<SliceValue> getPieChartData() {
         List<SliceValue> values = new ArrayList<>();
 
         // Add a slice for each entry in dailyStats
-        for (DailyStat ds : dailyStats.values()) {
-            SliceValue sv = new SliceValue(ds.getNumPours(), kegColor);
+        SliceValue sv;
+        for (Drinker d : drinkersArrayList) {
+            if(dailyStats.containsKey(d.getNfcId())) {
+                DailyStat ds = dailyStats.get(d.getNfcId());
+                sv = new SliceValue(ds.getNumPours(), d.getColor());
+                sv.setLabel(d.getShortName());
+            }
+            else {
+                sv = new SliceValue(0, d.getColor());
+                sv.setLabel("");
+            }
 
-            Drinker drinker = drinkers.get(ds.getNfcId());
-            sv.setLabel(drinker.getShortName());
-            sv.setColor(drinker.getColor());
             values.add(sv);
         }
-
         return values;
     }
 
@@ -578,12 +644,7 @@ public class MainActivity extends AppCompatActivity {
             drinkers.put(d.getNfcId(), d);
         }
 
-        // Load data for daily pie chart
-        List<DailyStat> dsList = DailyStat.find(DailyStat.class, "date = ?", getDateString());
-        dailyStats = new HashMap<>();
-        for (DailyStat ds : dsList) {
-            dailyStats.put(ds.getNfcId(), ds);
-        }
+        loadDailyStats(getDateString());
 
         // Retrieve sounds list
         soundsList = new ArrayList<>(Sound.listAll(Sound.class));
@@ -599,11 +660,20 @@ public class MainActivity extends AppCompatActivity {
         // Shared Preferences
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         totalServed = sharedPref.getLong("totalServed", 32800);
-        dateToday = sharedPref.getString("pieChartDateString", "00/00/00");
+        dateToday = sharedPref.getString("dateToday", "00/00/00");
         kegCounter = sharedPref.getInt("kegCounter", BEERS_IN_KEG - 1);
         defaultSoundIndex = sharedPref.getInt("defaultSoundIndex", 0);
 
         Log.i("kegCounter", Integer.toString(kegCounter));
+    }
+
+    private void loadDailyStats(String date) {
+        // Load data for daily pie chart
+        List<DailyStat> dsList = DailyStat.find(DailyStat.class, "date = ?", date);
+        dailyStats = new HashMap<>();
+        for (DailyStat ds : dsList) {
+            dailyStats.put(ds.getNfcId(), ds);
+        }
     }
 
     private void saveSharedPrefs() {
@@ -611,7 +681,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putLong("totalServed", totalServed);
-        editor.putString("pieChartDateString", dateToday);
+        editor.putString("dateToday", dateToday);
         editor.putInt("kegCounter", kegCounter);
         editor.putInt("defaultSoundIndex", defaultSoundIndex);
         editor.apply();
@@ -664,7 +734,7 @@ public class MainActivity extends AppCompatActivity {
         ds.save();
 
         updateGraph();
-        updatePieChart();
+        setPieChartDate(dateToday);
     }
 
     private void openConfirmActivity(int position) {
@@ -690,7 +760,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             adminMode = true;
             kegEditText.setText(String.valueOf(kegCounter));
-            //kegEditText.setSelection(kegEditText.getText().length());
+            kegEditText.setSelection(kegEditText.getText().length());
 
             slideToTop(adminLayout);
         }
@@ -734,7 +804,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Returns date in ms
-    public long getDate() {
+    public static long getDate() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.MILLISECOND, 0);
         calendar.set(Calendar.SECOND, 0);
@@ -743,13 +813,11 @@ public class MainActivity extends AppCompatActivity {
         return calendar.getTimeInMillis();
     }
 
-    protected String getDateString() {
-        Date date = new Date(getDate());
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy", Locale.US);
-        return sdf.format(date);
+    protected static String getDateString() {
+        return getDateString(getDate());
     }
 
-    protected String getDateString(long l) {
+    protected static String getDateString(long l) {
         Date date = new Date(l);
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy", Locale.US);
         return sdf.format(date);
@@ -763,8 +831,6 @@ public class MainActivity extends AppCompatActivity {
 
         intent.putExtra("drinker", drinkersArrayList.get(position));
         intent.putExtra("drinkerPosition", position);
-        /*intent.putExtra("drinkerName", drinkersArrayList.get(position).name);
-        intent.putExtra("drinkerCredits", drinkersArrayList.get(position).credits);*/
 
         startActivityForResult(intent, EDIT_REQ_CODE);
 
@@ -790,12 +856,17 @@ public class MainActivity extends AppCompatActivity {
     public boolean onAdjustKegClick() {
         int newValue = Integer.parseInt(kegEditText.getText().toString());
 
-        if (newValue <= BEERS_IN_KEG && newValue >= 0)
-            kegCounter = newValue;
-        else
-            kegCounter = BEERS_IN_KEG;
+        if(newValue != kegCounter) {
+            if (newValue <= BEERS_IN_KEG && newValue >= 0)
+                kegCounter = newValue;
+            else
+                kegCounter = BEERS_IN_KEG;
 
-        updateKegGraph();
+            Snackbar.make(coordinatorLayout, "Keg Level Updated", Snackbar.LENGTH_SHORT).show();
+
+            updateKegGraph();
+        }
+
         return true;
     }
 
@@ -899,6 +970,7 @@ public class MainActivity extends AppCompatActivity {
                 drinker.setCredits(drinker.getCredits() + DEFAULT_CREDITS_REFILL);
             } else {
                 drinker.subtractCredit();
+                setPieChartDate(dateToday);
                 increaseTotalServed();
                 increaseDailyStat(drinker);
             }
@@ -1012,7 +1084,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Thanks tibox stackoverflow.com
-    private int getMatColor(String typeColor)
+    protected int getMatColor(String typeColor)
     {
         int returnColor = Color.BLACK;
         int arrayId = getResources().getIdentifier("mdcolor_" + typeColor, "array", getApplicationContext().getPackageName());
