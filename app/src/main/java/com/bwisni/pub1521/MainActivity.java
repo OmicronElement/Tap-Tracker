@@ -168,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean adminMode = false;
 
     private String dateToday;
+    private ComboLineColumnChartData comboLineColumnChartData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -350,12 +351,12 @@ public class MainActivity extends AppCompatActivity {
     private void initGraph() {
         final List<DailyStat> allDailyStats = DailyStat.listAll(DailyStat.class);
 
-        columnChartData = new ColumnChartData(generateColumnData(allDailyStats));
+        columnChartData = new ColumnChartData(getColumnData(allDailyStats));
         columnChartData.setStacked(false);
 
-        lineChartData = new LineChartData(generateLineData(allDailyStats));
+        lineChartData = new LineChartData(getLineData(allDailyStats));
 
-        ComboLineColumnChartData data = new ComboLineColumnChartData(columnChartData, lineChartData);
+        comboLineColumnChartData = new ComboLineColumnChartData(columnChartData, lineChartData);
 
         int x = 0;
         List<AxisValue> axisValues = new ArrayList<>();
@@ -370,26 +371,26 @@ public class MainActivity extends AppCompatActivity {
         Axis axisY = new Axis().setHasLines(true);
         //axisY.setName("Pours");
 
-        data.setAxisXBottom(axisX);
-        data.setAxisYLeft(axisY);
-        data.setValueLabelTextSize(20);
-        data.setValueLabelBackgroundEnabled(true);
-        data.setValueLabelBackgroundAuto(false);
-        data.setValueLabelBackgroundColor(Color.parseColor("#00ffffff"));
+        comboLineColumnChartData.setAxisXBottom(axisX);
+        comboLineColumnChartData.setAxisYLeft(axisY);
+        comboLineColumnChartData.setValueLabelTextSize(20);
+        comboLineColumnChartData.setValueLabelBackgroundEnabled(true);
+        comboLineColumnChartData.setValueLabelBackgroundAuto(false);
+        comboLineColumnChartData.setValueLabelBackgroundColor(Color.parseColor("#00ffffff"));
 
-        graph.setComboLineColumnChartData(data);
+        graph.setComboLineColumnChartData(comboLineColumnChartData);
 
         graph.setOnValueTouchListener(new ComboLineColumnChartOnValueSelectListener() {
             @Override
             public void onColumnValueSelected(int columnIndex, int subcolumnIndex, SubcolumnValue value) {
                 Set<String> dates = dailyTotals.keySet();
                 ArrayList<String> datesList = new ArrayList<>(dates);
-                setPieChartDate(datesList.get(columnIndex));
+                updatePieChart(datesList.get(columnIndex));
             }
 
             @Override
             public void onPointValueSelected(int lineIndex, int pointIndex, PointValue value) {
-
+                onColumnValueSelected(pointIndex, 0, null);
             }
 
             @Override
@@ -406,10 +407,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private List<PointValue> getGraphDataFromDailyStats(List<DailyStat> dailyStats) {
+    private List<PointValue> getGraphDataFromDailyStats(List<DailyStat> allDailyStats) {
         List<PointValue> values = new ArrayList<>();
 
-        generateDailyTotals(dailyStats);
+        generateDailyTotals(allDailyStats);
 
         int i = 0;
         for (Integer total : dailyTotals.values()) {
@@ -457,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
         return columnChartData;
     }*/
 
-    private ArrayList<Column> generateColumnData(List<DailyStat> allDailyStats) {
+    private ArrayList<Column> getColumnData(List<DailyStat> allDailyStats) {
         ArrayList<Column> columns = new ArrayList<>();
 
         for (PointValue pv : getGraphDataFromDailyStats(allDailyStats)) {
@@ -475,7 +476,7 @@ public class MainActivity extends AppCompatActivity {
         return columns;
     }
 
-    private List<Line> generateLineData(List<DailyStat> allDailyStats) {
+    private List<Line> getLineData(List<DailyStat> allDailyStats) {
         Line line = new Line(getGraphDataFromDailyStats(allDailyStats));
         line.setColor(Color.WHITE);
         line.setCubic(true);
@@ -491,21 +492,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateGraph() {
         loadDailyStats(getDateString());
-        Line line = lineChartData.getLines().get(0);
-        List<PointValue> pointValues = line.getValues();
-        PointValue lastPointValue = pointValues.get(pointValues.size()-1);
-        lastPointValue.setTarget(lastPointValue.getX(), lastPointValue.getY()+1);
 
+        // Check if we need to add a new point/column
+        if(!dailyTotals.containsKey(getDateString())){
+            initGraph();
+        }else { // Otherwise increase existing one
+            Line line = lineChartData.getLines().get(0);
+            List<PointValue> pointValues = line.getValues();
+            PointValue lastPointValue = pointValues.get(pointValues.size() - 1);
+            lastPointValue.setTarget(lastPointValue.getX(), lastPointValue.getY() + 1);
 
-        List<Column> columns = columnChartData.getColumns();
-        Column column = columns.get(pointValues.size()-1);
-        SubcolumnValue lastSubcolumnValue = column.getValues().get(0);
-        lastSubcolumnValue.setTarget(lastSubcolumnValue.getValue()+1);
-        graph.startDataAnimation(3000);
+            List<Column> columns = columnChartData.getColumns();
+            Column column = columns.get(columns.size() - 1);
+            SubcolumnValue lastSubcolumnValue = column.getValues().get(0);
+            lastSubcolumnValue.setTarget(lastSubcolumnValue.getValue() + 1);
+            graph.startDataAnimation(3000);
+        }
     }
 
     private void initKegGraph() {
-        kegGraphData = new ColumnChartData(generateKegData());
+        kegGraphData = new ColumnChartData(getKegData());
         kegGraphData.setFillRatio(1);
         kegGraphData.setStacked(true);
 
@@ -529,7 +535,7 @@ public class MainActivity extends AppCompatActivity {
         kegGraph.startDataAnimation(2000);
     }
 
-    private ArrayList<Column> generateKegData() {
+    private ArrayList<Column> getKegData() {
         ArrayList<Column> columns = new ArrayList<>();
 
         ArrayList<SubcolumnValue> subcolumnValues = new ArrayList<>();
@@ -577,9 +583,14 @@ public class MainActivity extends AppCompatActivity {
         pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
             @Override
             public void onValueSelected(int arcIndex, SliceValue value) {
-                String name = String.valueOf(value.getLabelAsChars());
+                String name = drinkersArrayList.get(arcIndex).getName();
                 String s = name + ": " + String.valueOf((int) value.getValue()) + " pours";
-                Snackbar.make(coordinatorLayout, s, Snackbar.LENGTH_SHORT).show();
+                Snackbar snackbar = Snackbar.make(coordinatorLayout, s, Snackbar.LENGTH_SHORT);
+                View view = snackbar.getView();
+                CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) view.getLayoutParams();
+                params.gravity = Gravity.BOTTOM | Gravity.LEFT;
+                view.setLayoutParams(params);
+                snackbar.show();
             }
 
             @Override
@@ -591,12 +602,13 @@ public class MainActivity extends AppCompatActivity {
         pieChart.setPieChartData(pieChartData);
     }
 
-    private void setPieChartDate(String date) {
+    private void updatePieChart(String date) {
         loadDailyStats(date);
 
         List<SliceValue> values = pieChartData.getValues();
         for (Drinker drinker : drinkersArrayList) {
             SliceValue sv = values.get(drinkersArrayList.indexOf(drinker));
+            sv.setColor(drinker.getColor());
             // If we have a daily stat today for a given drinker, set target to new value
             if(dailyStats.containsKey(drinker.getNfcId())) {
                 DailyStat dailyStat = dailyStats.get(drinker.getNfcId());
@@ -607,9 +619,9 @@ public class MainActivity extends AppCompatActivity {
                 sv.setTarget(0);
             }
         }
-        pieChart.startDataAnimation(2000);
+        pieChart.startDataAnimation(1500);
 
-        if(!date.equals(dateToday))
+        if(!date.equals(getDateString()))
             pieChartData.setCenterText2(date);
         else
             pieChartData.setCenterText2("Today");
@@ -699,7 +711,6 @@ public class MainActivity extends AppCompatActivity {
         if (kegCounter > 0)
             kegCounter--;
 
-        updateGraph();
         updateKegGraph();
         updateTotalServed();
     }
@@ -734,7 +745,7 @@ public class MainActivity extends AppCompatActivity {
         ds.save();
 
         updateGraph();
-        setPieChartDate(dateToday);
+        updatePieChart(dateToday);
     }
 
     private void openConfirmActivity(int position) {
@@ -935,6 +946,8 @@ public class MainActivity extends AppCompatActivity {
 
             // Start with DEFAULT_CREDITS_REFILL credits
             addDrinker(name, DEFAULT_CREDITS_REFILL, nfcId);
+
+            updatePieChart(getDateString());
         }
         // Returning from Edit Drinker
         if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_OK && intent != null) {
@@ -942,19 +955,23 @@ public class MainActivity extends AppCompatActivity {
             int credits = intent.getIntExtra("drinkerCredits", 0);
             String name = intent.getStringExtra("name");
             int position = intent.getIntExtra("drinkerPosition", -1);
+            int color =  intent.getIntExtra("drinkerColor", Color.BLACK);
 
             Drinker drinker = drinkersArrayList.get(position);
             drinker.setName(name);
             drinker.setCredits(credits);
+            drinker.setColor(color);
             drinker.save();
 
             // Invalidate views in case name was changed
             drinkersListView.invalidateViews();
+            updatePieChart(getDateString());
         }
         // Returning from Edit Drinker - Delete Drinker
         if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_CANCELED && intent != null) {
             int position = intent.getIntExtra("drinkerPosition", -1);
             removeDrinker(position);
+            updatePieChart(getDateString());
         }
         // Returning from Confirm with successful credit use/increase
         if (requestCode == CONFIRM_REQ_CODE && resultCode == RESULT_OK && intent != null) {
@@ -970,7 +987,7 @@ public class MainActivity extends AppCompatActivity {
                 drinker.setCredits(drinker.getCredits() + DEFAULT_CREDITS_REFILL);
             } else {
                 drinker.subtractCredit();
-                setPieChartDate(dateToday);
+                updatePieChart(dateToday);
                 increaseTotalServed();
                 increaseDailyStat(drinker);
             }

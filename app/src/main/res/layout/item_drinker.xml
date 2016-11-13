@@ -26,4 +26,12 @@
         android:layout_alignParentEnd="true"
         android:textSize="50dp"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/list_user_icon"
+        android:layout_centerInParent="false"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/drinkerCredits" />
 </RelativeLayout>

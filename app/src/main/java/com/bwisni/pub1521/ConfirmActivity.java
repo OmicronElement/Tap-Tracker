@@ -148,7 +148,7 @@ public class ConfirmActivity extends AppCompatActivity {
             // If we don't already have slice for today, add one and increase it
             String today = MainActivity.getDateString().substring(0,5);
             if (!String.valueOf(sv.getLabelAsChars()).equals(today)) {
-                values.add(new SliceValue(0, 0, Color.WHITE));
+                values.add(new SliceValue(0, Color.WHITE));
                 sv = values.get(values.size() - 1);
                 sv.setLabel(today);
             }

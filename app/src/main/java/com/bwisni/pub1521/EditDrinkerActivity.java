@@ -1,13 +1,21 @@
 package com.bwisni.pub1521;
 
 import android.content.Intent;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.nfc.FormatException;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.amulyakhare.textdrawable.TextDrawable;
+import com.thebluealliance.spectrum.SpectrumDialog;
 
 import be.appfoundry.nfclibrary.activities.NfcActivity;
 import be.appfoundry.nfclibrary.exceptions.InsufficientCapacityException;
@@ -22,7 +30,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 
-public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
+public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCallback{
     @Bind(R.id.editTextCredit) EditText editTextCredit;
     @Bind(R.id.editNameTextView) EditText nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
@@ -30,6 +38,7 @@ public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
     private int position;
     private int credits;
     private String uuid;
+    private Drinker drinker;
 
     AsyncOperationCallback mAsyncOperationCallback = new AsyncOperationCallback() {
 
@@ -51,12 +60,14 @@ public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
 
         Intent intent = getIntent();
 
-        Drinker drinker = (Drinker) intent.getSerializableExtra("drinker");
+        drinker = (Drinker) intent.getSerializableExtra("drinker");
 
         position = intent.getIntExtra("drinkerPosition", -1);
         credits = drinker.getCredits();
         String name = drinker.getName();
         String nfcId = drinker.getNfcId();
+
+        buildIcon();
 
         nameTextView.setText(name);
         nfcIdTextView.setText(nfcId);
@@ -85,6 +96,7 @@ public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
         intent.putExtra("drinkerPosition", position);
         intent.putExtra("name", nameTextView.getText().toString());
         intent.putExtra("drinkerCredits", credits);
+        intent.putExtra("drinkerColor", drinker.getColor());
 
         setResult(RESULT_OK, intent);
         finish();
@@ -123,6 +135,12 @@ public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
         refreshCreditEditText();
     }
 
+    @OnClick(R.id.edit_user_icon)
+        void editColor() {
+            showDialog();
+    }
+
+
     // Create new card for this user on scan
     @Override
     protected void onNewIntent(Intent intent) {
@@ -131,6 +149,49 @@ public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
         new WriteSmsNfcAsync(this, mAsyncOperationCallback).executeWriteOperation();
 
         editDrinkerDone();
+    }
+
+    private void showDialog() {
+        new SpectrumDialog.Builder(getApplicationContext())
+                .setColors(getMatColors("300"))
+                .setSelectedColor(drinker.getColor())
+                .setDismissOnColorSelected(true)
+                .setOutlineWidth(2)
+                .setOnColorSelectedListener(new SpectrumDialog.OnColorSelectedListener() {
+                    @Override public void onColorSelected(boolean positiveResult, @ColorInt int color) {
+                        if (positiveResult) {
+                            drinker.setColor(color);
+                            buildIcon();
+                        }
+                    }
+                }).build().show(getSupportFragmentManager(), "colorpicker");
+    }
+
+    private void buildIcon() {
+        TextDrawable drawable = TextDrawable.builder()
+                .beginConfig()
+                .bold()
+                .endConfig()
+                .buildRound(drinker.getShortName(), drinker.getColor());
+
+        ImageView image = (ImageView) findViewById(R.id.edit_user_icon);
+        image.setImageDrawable(drawable);
+    }
+
+    public int[] getMatColors(String typeColor) {
+        // Grab material colors from resources
+        int arrayId = getResources().getIdentifier("mdcolor_" + typeColor, "array", getApplicationContext().getPackageName());
+        if (arrayId != 0) {
+            TypedArray colors = getResources().obtainTypedArray(arrayId);
+            int[] materialColors = new int[colors.length()];
+            for (int i = 0; i < colors.length(); i++) {
+                materialColors[i] = colors.getColor(i, MainActivity.mAccentColor);
+            }
+
+            colors.recycle();
+            return materialColors;
+        }
+        else return new int[(Color.BLACK)];
     }
 
     @Override

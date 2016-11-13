@@ -22,18 +22,33 @@
         android:layout_height="wrap_content"
         android:id="@+id/linearLayout">
 
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Name"
-            android:id="@+id/editNameTextView"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:textSize="@dimen/abc_text_size_display_1_material"
-            android:clickable="true"
-            android:selectAllOnFocus="false"
-            android:maxLines="1" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name"
+                android:id="@+id/editNameTextView"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center_horizontal"
+                android:textSize="@dimen/abc_text_size_display_1_material"
+                android:clickable="true"
+                android:selectAllOnFocus="false"
+                android:maxLines="1"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true" />
+
+            <ImageView
+                android:id="@+id/edit_user_icon"
+                android:layout_centerInParent="false"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true" />
+        </RelativeLayout>
 
         <TextView
             android:layout_width="wrap_content"
