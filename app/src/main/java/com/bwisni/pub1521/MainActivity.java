@@ -168,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean adminMode = false;
 
     private String dateToday;
-    private ComboLineColumnChartData comboLineColumnChartData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -356,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
 
         lineChartData = new LineChartData(getLineData(allDailyStats));
 
-        comboLineColumnChartData = new ComboLineColumnChartData(columnChartData, lineChartData);
+        ComboLineColumnChartData comboLineColumnChartData = new ComboLineColumnChartData(columnChartData, lineChartData);
 
         int x = 0;
         List<AxisValue> axisValues = new ArrayList<>();
@@ -728,6 +727,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void increaseDailyStat(Drinker drinker) {
+        increaseTotalServed();
+
         // Start a new chart if it's a new day
         if (!dateToday.equals(getDateString())) {
             dateToday = getDateString();
@@ -947,7 +948,7 @@ public class MainActivity extends AppCompatActivity {
             // Start with DEFAULT_CREDITS_REFILL credits
             addDrinker(name, DEFAULT_CREDITS_REFILL, nfcId);
 
-            updatePieChart(getDateString());
+            initPieChart();
         }
         // Returning from Edit Drinker
         if (requestCode == EDIT_REQ_CODE && resultCode == RESULT_OK && intent != null) {
@@ -988,7 +989,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 drinker.subtractCredit();
                 updatePieChart(dateToday);
-                increaseTotalServed();
                 increaseDailyStat(drinker);
             }
 
