@@ -33,7 +33,7 @@ import lecho.lib.hellocharts.model.SliceValue;
 import lecho.lib.hellocharts.view.PieChartView;
 
 public class ConfirmActivity extends AppCompatActivity {
-    private final static int FINISH_DELAY_MILLIS = 6000;
+    private final static int FINISH_DELAY_MILLIS = 3000;
 
     @Bind(R.id.drinkerConfirmName) TextView nameTextView;
     @Bind(R.id.drinkerConfirmCredits) TextSwitcher creditsTextView;

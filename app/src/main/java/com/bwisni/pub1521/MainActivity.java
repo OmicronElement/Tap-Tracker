@@ -397,6 +397,11 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        resetGraphViewport();
+    }
+
+    private void resetGraphViewport() {
         // Set viewport to last GRAPH_VIEWPORT_DAYS days
         graph.setHorizontalScrollBarEnabled(true);
         Viewport v = new Viewport(graph.getMaximumViewport());
@@ -505,6 +510,9 @@ public class MainActivity extends AppCompatActivity {
             Column column = columns.get(columns.size() - 1);
             SubcolumnValue lastSubcolumnValue = column.getValues().get(0);
             lastSubcolumnValue.setTarget(lastSubcolumnValue.getValue() + 1);
+
+            resetGraphViewport();
+
             graph.startDataAnimation(3000);
         }
     }
@@ -530,6 +538,14 @@ public class MainActivity extends AppCompatActivity {
 
         sc.setTarget(kegCounter);
         bg.setTarget(BEERS_IN_KEG - kegCounter);
+
+        kegTextView.setText(String.valueOf(kegCounter));
+
+        if (kegCounter > KEG_LOW_VALUE) {
+            sc.setColor(kegColor);
+        } else {
+            sc.setColor(KEG_LOW_COLOR);
+        }
 
         kegGraph.startDataAnimation(2000);
     }
