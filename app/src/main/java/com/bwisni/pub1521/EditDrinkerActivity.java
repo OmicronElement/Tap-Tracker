@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.nfc.FormatException;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -30,7 +31,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 
-public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCallback{
+public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
     @Bind(R.id.editTextCredit) EditText editTextCredit;
     @Bind(R.id.editNameTextView) EditText nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
@@ -164,7 +165,7 @@ public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCal
                             buildIcon();
                         }
                     }
-                }).build().show(getSupportFragmentManager(), "colorpicker");
+                }).build();//.show(getSupportFragmentManager(), "colorpicker");
     }
 
     private void buildIcon() {

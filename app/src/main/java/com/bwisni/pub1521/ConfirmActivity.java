@@ -144,7 +144,13 @@ public class ConfirmActivity extends AppCompatActivity {
 
         if(drinker.getCredits() != 0) {
             List<SliceValue> values = pieChartData.getValues();
-            SliceValue sv = values.get(values.size() - 1);
+            SliceValue sv;
+            if(values.size() == 0){
+                sv = new SliceValue().setLabel(" ");
+                values = new ArrayList<>();
+            } else {
+                sv = values.get(values.size() - 1);
+            }
             // If we don't already have slice for today, add one and increase it
             String today = MainActivity.getDateString().substring(0,5);
             if (!String.valueOf(sv.getLabelAsChars()).equals(today)) {

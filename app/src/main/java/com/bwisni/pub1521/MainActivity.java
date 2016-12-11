@@ -219,11 +219,12 @@ public class MainActivity extends AppCompatActivity {
         fadeOut.setStartOffset(3000);
         fadeOut.setDuration(3000);
 
-
         slideshow.setInAnimation(fadeIn);
         slideshow.setOutAnimation(fadeOut);
         slideshow.setFlipInterval(SLIDESHOW_INTERVAL);
         slideshow.startFlipping();
+
+        slideshow.setDisplayedChild(0);
     }
 
     private void addPicToSlideshow(String photoPath) {
@@ -280,24 +281,27 @@ public class MainActivity extends AppCompatActivity {
         soundsListView.setItemChecked(defaultSoundIndex, true);
     }
 
+    static int lastRand = -1;
     public static Uri getSound() {
-        // Play fun sounds randomly, otherwise use default sound
-        int oneIn = 3;
+        // Play sound randomly
+        //int oneIn = 3;
         Random rand = new Random();
-        int value = rand.nextInt(oneIn);
+        //int value = rand.nextInt(oneIn);
 
-        Log.i("RNG", "Random generated: " + value);
+        //Log.i("RNG", "Random generated: " + value);
 
         int size = soundsList.size();
         int nextRand = rand.nextInt(size);
-        if (value == oneIn - 1 && size > 1) {
-            while (nextRand == defaultSoundIndex) {
+        if (size > 0) {
+            while(nextRand == lastRand) {
                 nextRand = rand.nextInt(size);
             }
+            lastRand = nextRand;
+
             return soundsList.get(nextRand).getUri();
-        } else {
-            return soundsList.get(defaultSoundIndex).getUri();
         }
+
+        return null;
     }
 
     private void initAdminTabs() {
@@ -504,17 +508,18 @@ public class MainActivity extends AppCompatActivity {
             Line line = lineChartData.getLines().get(0);
             List<PointValue> pointValues = line.getValues();
             PointValue lastPointValue = pointValues.get(pointValues.size() - 1);
-            lastPointValue.setTarget(lastPointValue.getX(), lastPointValue.getY() + 1);
+            lastPointValue.set(lastPointValue.getX(), lastPointValue.getY() + 1);
+            lastPointValue.setLabel(String.valueOf(lastPointValue.getY()));
 
             List<Column> columns = columnChartData.getColumns();
             Column column = columns.get(columns.size() - 1);
             SubcolumnValue lastSubcolumnValue = column.getValues().get(0);
-            lastSubcolumnValue.setTarget(lastSubcolumnValue.getValue() + 1);
+            lastSubcolumnValue.setValue(lastSubcolumnValue.getValue() + 1);
 
-            resetGraphViewport();
-
-            graph.startDataAnimation(3000);
+            //graph.startDataAnimation(3000); // animations not jiving with viewport reset
         }
+
+        resetGraphViewport();
     }
 
     private void initKegGraph() {
@@ -851,8 +856,8 @@ public class MainActivity extends AppCompatActivity {
         return sdf.format(date);
     }
 
-    @OnItemLongClick(R.id.drinkersListView)
-    boolean onItemLongClick(int position, View view) {
+    @OnItemClick(R.id.drinkersListView)
+    void onDrinkerClick(int position, View view) {
         // Create intent to open up dialogue
         Intent intent = new Intent(getApplicationContext(),
                 EditDrinkerActivity.class);
@@ -861,8 +866,6 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("drinkerPosition", position);
 
         startActivityForResult(intent, EDIT_REQ_CODE);
-
-        return true;
     }
 
     // Add a drinker
@@ -942,6 +945,15 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.start();
     }
 
+    @OnClick(R.id.slideshow)
+    public void onSlideshowClick(View view){
+        slideshow.stopFlipping();
+
+        slideshow.showNext();
+
+        slideshow.startFlipping();
+    }
+
     @Override
     public void onBackPressed() {
         if (adminMode)
@@ -1009,6 +1021,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             drinker.save();
+
+
+            resetGraphViewport();
+            initSlideshow();
+            slideshow.setDisplayedChild(whichChild);
         }
         // Returning from valid adminMode password check
         if (requestCode == ADMIN_REQ_CODE && resultCode == RESULT_OK && intent != null) {
@@ -1024,13 +1041,13 @@ public class MainActivity extends AppCompatActivity {
         }
         if (requestCode == CAMERA_REQ_CODE && resultCode == RESULT_OK) {
             initSlideshow();
-            slideshow.setDisplayedChild(slideshow.getChildCount()-1);
             Log.d("CAMERA", "result_ok");
         }
 
         saveSharedPrefs();
     }
 
+    private int whichChild;
     // Called when NFC Tag has been read
     @Override
     protected void onNewIntent(Intent intent) {
@@ -1058,6 +1075,8 @@ public class MainActivity extends AppCompatActivity {
         if (newUser && adminMode) {
             onFabClick(getCurrentFocus());
         }
+
+        whichChild = slideshow.getDisplayedChild();
     }
 
     @Override

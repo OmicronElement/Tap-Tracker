@@ -15,7 +15,7 @@ import java.util.ArrayList;
 /**
  * Created by Bryan on 10/27/2016.
  * Thanks guides.codepath.com
- * Designed to be used along with default ListView item template 'simple_list_item_single_choice'
+ * Designed to be used along with default ListView item template 'simple_list_item_1'
  */
 public class SoundAdapter extends ArrayAdapter {
     SoundAdapter(Context context, ArrayList<Sound> sounds) {
@@ -31,7 +31,7 @@ public class SoundAdapter extends ArrayAdapter {
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext())
-                    .inflate(android.R.layout.simple_list_item_single_choice, parent, false);
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
         }
 
         assert sound != null;
