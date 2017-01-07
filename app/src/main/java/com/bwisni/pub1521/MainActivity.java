@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     static int lastRand = -1;
-    public static Uri getSound() {
+    public Uri getSound() {
         // Play sound randomly
         //int oneIn = 3;
         Random rand = new Random();
@@ -293,7 +293,8 @@ public class MainActivity extends AppCompatActivity {
         int size = soundsList.size();
         int nextRand = rand.nextInt(size);
         if (size > 0) {
-            while(nextRand == lastRand) {
+            // Choose new random if same as last or sound is not enabled
+            while(nextRand == lastRand || !soundsListView.isItemChecked(nextRand)) {
                 nextRand = rand.nextInt(size);
             }
             lastRand = nextRand;
@@ -509,7 +510,7 @@ public class MainActivity extends AppCompatActivity {
             List<PointValue> pointValues = line.getValues();
             PointValue lastPointValue = pointValues.get(pointValues.size() - 1);
             lastPointValue.set(lastPointValue.getX(), lastPointValue.getY() + 1);
-            lastPointValue.setLabel(String.valueOf(lastPointValue.getY()));
+            lastPointValue.setLabel(String.valueOf((int) lastPointValue.getY()));
 
             List<Column> columns = columnChartData.getColumns();
             Column column = columns.get(columns.size() - 1);
@@ -777,6 +778,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("drinker", drinkersArrayList.get(position));
         intent.putExtra("drinkerPosition", position);
         intent.putExtra("adminMode", adminMode);
+        intent.putExtra("pourSound", getSound().toString());
 
         startActivityForResult(intent, CONFIRM_REQ_CODE);
     }

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bwisni.pub1521" >
+    package="com.bwisni.pub1521">
 
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <uses-feature android:name="android.hardware.camera"
+    <uses-feature
+        android:name="android.hardware.camera"
         android:required="true" />
-
 
     <application
         android:name="com.orm.SugarApp"
@@ -16,8 +16,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
-
+        android:theme="@style/AppTheme">
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.bwisni.pub1521.fileprovider"
@@ -41,17 +40,17 @@
         </activity>
         <activity
             android:name=".AddDrinkerActivity"
-            android:theme="@style/AppTheme"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".EditDrinkerActivity"
-            android:theme="@style/AppTheme"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".ConfirmActivity"
             android:label="@string/title_activity_confirm"
-            android:theme="@style/AppTheme"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme" />
 
         <meta-data
             android:name="DATABASE"
@@ -66,11 +65,13 @@
             android:name="DOMAIN_PACKAGE_NAME"
             android:value="com.bwisni" />
 
-        <activity android:name=".PasswordActivity"
-            android:theme="@style/AppTheme"
-            android:screenOrientation="landscape">
-
-        </activity>
+        <activity
+            android:name=".PasswordActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme"></activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"></activity>
     </application>
 
 </manifest>

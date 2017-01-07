@@ -20,6 +20,7 @@ import java.util.ArrayList;
  * Created by Bryan on 4/14/2016.
  * ListViewAdapter for Drinker class
  */
+//TODO: https://developer.android.com/guide/topics/ui/menus.html#FloatingContextMenu
 public class DrinkerAdapter extends ArrayAdapter<Drinker> {
     // View lookup cache
     private static class ViewHolder {

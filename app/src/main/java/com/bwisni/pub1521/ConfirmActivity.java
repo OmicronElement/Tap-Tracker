@@ -46,6 +46,7 @@ public class ConfirmActivity extends AppCompatActivity {
     List<DailyStat> dailyStatList;
 
     Handler handler = new Handler();
+    private Uri pourSound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,7 @@ public class ConfirmActivity extends AppCompatActivity {
         drinker = (Drinker) intent.getSerializableExtra("drinker");
         position = intent.getIntExtra("drinkerPosition", 0);
         boolean adminMode = intent.getBooleanExtra("adminMode", false);
+        pourSound = Uri.parse(intent.getStringExtra("pourSound"));
 
         String name = drinker.getName();
         nfcId = drinker.getNfcId();
@@ -246,7 +248,7 @@ public class ConfirmActivity extends AppCompatActivity {
     }
 
     private void playPourSound() {
-        playMedia(MainActivity.getSound());
+        playMedia(pourSound);
     }
 
     private void playMedia(Uri uri) {

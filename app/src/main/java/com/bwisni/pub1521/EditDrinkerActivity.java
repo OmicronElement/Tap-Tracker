@@ -30,8 +30,8 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
-
-public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
+//TODO: fix NFC writing
+public class EditDrinkerActivity extends AppCompatActivity implements AsyncUiCallback{
     @Bind(R.id.editTextCredit) EditText editTextCredit;
     @Bind(R.id.editNameTextView) EditText nameTextView;
     @Bind(R.id.nfcIdtextView) TextView nfcIdTextView;
@@ -165,7 +165,7 @@ public class EditDrinkerActivity extends NfcActivity implements AsyncUiCallback{
                             buildIcon();
                         }
                     }
-                }).build();//.show(getSupportFragmentManager(), "colorpicker");
+                }).build().show(getSupportFragmentManager(), "colorpicker");
     }
 
     private void buildIcon() {

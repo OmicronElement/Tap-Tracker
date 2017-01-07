@@ -31,7 +31,7 @@ public class SoundAdapter extends ArrayAdapter {
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext())
-                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+                    .inflate(android.R.layout.simple_list_item_multiple_choice, parent, false);
         }
 
         assert sound != null;

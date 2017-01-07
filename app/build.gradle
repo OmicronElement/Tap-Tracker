@@ -10,6 +10,7 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
         release {
@@ -20,7 +21,7 @@ android {
 }
 
 repositories {
-    maven{
+    maven {
         url "http://maven.appfoundry.be"
     }
     maven {
@@ -30,9 +31,8 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:design:25.0.0'
-    compile 'com.android.support:appcompat-v7:25.0.0'
+    compile 'com.android.support:design:25.1.0'
+    compile 'com.android.support:appcompat-v7:25.1.0'
     compile 'be.appfoundry:nfc-lib:1.0'
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.2'
@@ -43,4 +43,7 @@ dependencies {
     compile 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
     compile 'com.marvinlabs:android-slideshow-widget:0.4.+@aar'
     compile 'com.thebluealliance:spectrum:0.6.0'
+    compile 'com.android.support:support-v4:25.1.0'
+    compile 'com.android.support:support-vector-drawable:25.1.0'
+    testCompile 'junit:junit:4.12'
 }
