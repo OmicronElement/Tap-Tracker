@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.0"
 
     defaultConfig {
-        applicationId "com.bwisni.pub1521"
+        applicationId "com.bwisni.taptracker"
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
@@ -31,8 +31,8 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:design:25.1.0'
-    compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.android.support:design:25.1.1'
+    compile 'com.android.support:appcompat-v7:25.1.1'
     compile 'be.appfoundry:nfc-lib:1.0'
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.2'
@@ -41,9 +41,10 @@ dependencies {
     compile 'com.github.lecho:hellocharts-library:1.5.8@aar'
     compile 'com.facebook.stetho:stetho:1.4.1'
     compile 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
-    compile 'com.marvinlabs:android-slideshow-widget:0.4.+@aar'
-    compile 'com.thebluealliance:spectrum:0.6.0'
-    compile 'com.android.support:support-v4:25.1.0'
-    compile 'com.android.support:support-vector-drawable:25.1.0'
+    compile 'com.android.support:support-v4:25.1.1'
+    compile 'com.android.support:support-vector-drawable:25.1.1'
+    compile 'com.jrummyapps:colorpicker:2.0.4'
+    compile 'com.android.support:percent:25.1.1'
     testCompile 'junit:junit:4.12'
+    compile 'com.google.android.gms:play-services-ads:10.0.1'
 }

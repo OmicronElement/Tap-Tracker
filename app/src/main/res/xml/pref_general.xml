@@ -8,20 +8,59 @@
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
 
-    <EditTextPreference
-        android:defaultValue="0"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="Pours Remaining"
-        android:key="kegCounter"
-        android:inputType="number" />
-    <SwitchPreference
-        android:defaultValue="false"
-        android:title="Enable Sounds"
-        android:key="switch_preference_sounds"
-        />
-    <RingtonePreference
-        android:defaultValue=""
-        android:title="Ringtone preference"
-        android:key="ringtone_preference_1" />
+    <PreferenceCategory android:title="Keg Options">
+
+        <EditTextPreference
+            android:defaultValue="165"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Pours Remaining"
+            android:key="keg_counter"
+            android:inputType="number" />
+
+        <EditTextPreference
+            android:defaultValue="165"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Pours per Keg"
+            android:key="keg_size"
+            android:inputType="number" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Sounds">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:title="Enable Sounds"
+            android:key="switch_sounds_preference"
+            />
+        <RingtonePreference
+            android:defaultValue=""
+            android:ringtoneType="notification"
+            android:title="Pour Sound"
+            android:key="sound_preference" />
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Misc">
+        <com.jrummyapps.android.colorpicker.ColorPreference
+            android:defaultValue="@color/colorAccent"
+            android:key="graph_color"
+            android:title="Graph Color"
+            app:showAlphaSlider="false"
+            app:colorPresets="@array/mdcolor_A400"/>
+
+
+        <EditTextPreference
+            android:defaultValue="Welcome!"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Banner Text"
+            android:key="banner_text"
+            android:inputType="text" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:title="Keep Screen On"
+            android:key="switch_screen_awake_preference"
+            />
+
+    </PreferenceCategory>
 </PreferenceScreen>

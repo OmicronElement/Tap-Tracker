@@ -1,9 +1,11 @@
 <resources>
-    <string name="app_name">Pub 1521</string>
+    <string name="app_name">Tap Tracker</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_confirm">ConfirmActivity</string>
     <string name="creditsString">CREDITS</string>
     <string name="title_activity_settings">Settings</string>
+    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="banner_text">Welcome!</string>
 
     <!-- Strings related to Settings -->
 

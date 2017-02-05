@@ -2,19 +2,19 @@
 
     <!-- These settings headers are only used on tablets. -->
 
-    <header
-        android:fragment="com.bwisni.pub1521.SettingsActivity$GeneralPreferenceFragment"
+<!--    <header
+        android:fragment="taptracker.SettingsActivity$GeneralPreferenceFragment"
         android:icon="@drawable/ic_info_black_24dp"
         android:title="@string/pref_header_general" />
 
     <header
-        android:fragment="com.bwisni.pub1521.SettingsActivity$NotificationPreferenceFragment"
+        android:fragment="taptracker.SettingsActivity$NotificationPreferenceFragment"
         android:icon="@drawable/ic_notifications_black_24dp"
         android:title="@string/pref_header_notifications" />
 
-    <header
-        android:fragment="com.bwisni.pub1521.SettingsActivity$DataSyncPreferenceFragment"
+  <header
+        android:fragment="taptracker.SettingsActivity$DataSyncPreferenceFragment"
         android:icon="@drawable/ic_sync_black_24dp"
-        android:title="@string/pref_header_data_sync" />
+        android:title="@string/pref_header_data_sync" />-->
 
 </preference-headers>

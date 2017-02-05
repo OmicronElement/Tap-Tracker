@@ -1,11 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.bwisni.pub1521.MainActivity">
+    tools:context="com.bwisni.taptracker.MainActivity">
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="1"
+        android:title="Settings" />
     <item
         android:id="@+id/action_admin"
-        android:orderInCategory="1"
-        android:title="Admin" />
+        android:orderInCategory="99"
+        android:title="View/Edit Drinkers" />
     <item
         android:id="@+id/action_exit"
         android:orderInCategory="100"

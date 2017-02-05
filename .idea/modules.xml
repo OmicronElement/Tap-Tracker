@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Pub1521.iml" filepath="$PROJECT_DIR$/Pub1521.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TapTracker.iml" filepath="$PROJECT_DIR$/TapTracker.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.bwisni.pub1521.ConfirmActivity"
+    tools:context="com.bwisni.taptracker.ConfirmActivity"
     tools:showIn="@layout/activity_confirm"
     android:theme="@style/AppTheme"
     android:padding="@dimen/activity_vertical_margin">

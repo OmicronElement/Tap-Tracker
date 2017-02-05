@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bwisni.pub1521">
+    package="com.bwisni.taptracker">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.NFC" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true" />
 
     <application
         android:name="com.orm.SugarApp"
@@ -19,13 +14,26 @@
         android:theme="@style/AppTheme">
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.bwisni.pub1521.fileprovider"
+            android:authorities="com.bwisni.taptracker.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <meta-data
+            android:name="DATABASE"
+            android:value="taptracker.db" />
+        <meta-data
+            android:name="VERSION"
+            android:value="1" />
+        <meta-data
+            android:name="QUERY_LOG"
+            android:value="true" />
+        <meta-data
+            android:name="DOMAIN_PACKAGE_NAME"
+            android:value="com.bwisni" />
 
         <activity
             android:name=".MainActivity"
@@ -51,27 +59,15 @@
             android:label="@string/title_activity_confirm"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme" />
-
-        <meta-data
-            android:name="DATABASE"
-            android:value="pub1521.db" />
-        <meta-data
-            android:name="VERSION"
-            android:value="9" />
-        <meta-data
-            android:name="QUERY_LOG"
-            android:value="true" />
-        <meta-data
-            android:name="DOMAIN_PACKAGE_NAME"
-            android:value="com.bwisni" />
-
-        <activity
-            android:name=".PasswordActivity"
-            android:screenOrientation="landscape"
-            android:theme="@style/AppTheme"></activity>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
+            android:label="@string/title_activity_settings"
+            android:screenOrientation="landscape"/>
+        <activity
+            android:name=".WriteCardActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme" />
+
     </application>
 
 </manifest>

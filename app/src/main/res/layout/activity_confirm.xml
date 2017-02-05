@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.bwisni.pub1521.ConfirmActivity"
+    tools:context="com.bwisni.taptracker.ConfirmActivity"
     android:theme="@style/AppTheme">
 
     <android.support.design.widget.AppBarLayout
