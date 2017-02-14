@@ -97,7 +97,7 @@ public class AddDrinkerActivity extends NfcActivity implements AsyncUiCallback {
     @Override
     public void onError(Exception e) {
         //Toast.makeText(this,"error",Toast.LENGTH_SHORT).show();
-        Log.e("NFC", e.getMessage());
+        //Log.e("NFC", e.getMessage());
     }
 }
 

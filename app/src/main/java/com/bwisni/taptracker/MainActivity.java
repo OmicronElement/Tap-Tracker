@@ -37,6 +37,7 @@ import android.widget.TextView;
 import com.facebook.stetho.Stetho;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.orm.SugarContext;
 
 import java.text.SimpleDateFormat;
@@ -101,22 +102,22 @@ public class MainActivity extends AppCompatActivity {
     public static final int DEFAULT_KEG_SIZE = 165;
     protected static int beersInKeg = DEFAULT_KEG_SIZE;
 
-    @Bind(R.id.drinkersListView)
-    ListView drinkersListView;
+    @Bind(R.id.mainLayout)
+    RelativeLayout mainLayout;
     @Bind(R.id.bannerTextView)
     TextView bannerTextView;
     @Bind(R.id.kegTextView)
     TextView kegTextView;
-    @Bind(R.id.AdminLayout)
-    RelativeLayout adminLayout;
-    @Bind(R.id.coordinatorLayout)
-    CoordinatorLayout coordinatorLayout;
     @Bind(R.id.graph)
     ComboLineColumnChartView graph;
     @Bind(R.id.kegGraph)
     ColumnChartView kegGraph;
     @Bind(R.id.pieChart)
     PieChartView pieChart;
+    @Bind(R.id.AdminLayout)
+    RelativeLayout adminLayout;
+    @Bind(R.id.drinkersListView)
+    ListView drinkersListView;
 
     @Bind(R.id.fab)
     FloatingActionButton fab;
@@ -142,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        initAds();
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ButterKnife.bind(this);
@@ -153,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
 
         loadData();
 
-        initAds();
         initNfc();
         initColors();
         initBanner();
@@ -176,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initAds() {
+        MobileAds.initialize(getApplicationContext(), "ca-app-pub-4753048576668871~3512825148");
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
@@ -188,9 +192,9 @@ public class MainActivity extends AppCompatActivity {
             // Display instructions
         }
 
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        /*SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("first_launch", false);
-        editor.apply();
+        editor.apply();*/
     }
 
 
@@ -206,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("deprecation")
     private void initColors() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mAccentColor = sharedPreferences.getInt("accent_color",
+        mAccentColor = sharedPreferences.getInt("graph_color",
                 getResources().getColor(R.color.colorAccent));
 
         mTextColor = getResources().getColor(android.R.color.primary_text_dark);
@@ -220,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
 
     public Uri getSound() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String uriString = sharedPreferences.getString("sound_preference","android.resource://com.bwisni.taptracker/" + R.raw.beer);
+        String uriString = sharedPreferences.getString("sound_preference","android.resource://com.bwisni.taptracker/" + R.raw.pour);
         return Uri.parse(uriString);
     }
 
@@ -492,10 +496,11 @@ public class MainActivity extends AppCompatActivity {
             public void onValueSelected(int arcIndex, SliceValue value) {
                 String name = drinkersArrayList.get(arcIndex).getName();
                 String s = name + ": " + String.valueOf((int) value.getValue()) + " pours";
-                Snackbar snackbar = Snackbar.make(coordinatorLayout, s, Snackbar.LENGTH_SHORT);
+                Snackbar snackbar = Snackbar.make(mainLayout, s, Snackbar.LENGTH_SHORT);
                 View view = snackbar.getView();
                 CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) view.getLayoutParams();
                 params.gravity = Gravity.BOTTOM | Gravity.LEFT;
+                params.leftMargin = params.bottomMargin = (int) getResources().getDimension(R.dimen.activity_vertical_margin);
                 view.setLayoutParams(params);
                 snackbar.show();
             }
@@ -906,7 +911,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         // If we don't find a matching nfcId, open new user dialogue
-        if (newUser && adminMode) {
+        if (newUser) {
             onFabClick(getCurrentFocus());
         }
 

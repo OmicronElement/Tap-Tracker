@@ -149,15 +149,14 @@ public class ConfirmActivity extends AppCompatActivity {
             List<SliceValue> values = pieChartData.getValues();
             SliceValue sv;
             if(values.size() == 0){
-                sv = new SliceValue().setLabel(" ");
-                values = new ArrayList<>();
+                sv = new SliceValue(0, Color.WHITE).setLabel(" ");
+                values.add(sv);
             } else {
                 sv = values.get(values.size() - 1);
             }
             // If we don't already have slice for today, add one and increase it
             String today = MainActivity.getDateString().substring(0,5);
             if (!String.valueOf(sv.getLabelAsChars()).equals(today)) {
-                values.add(new SliceValue(0, Color.WHITE));
                 sv = values.get(values.size() - 1);
                 sv.setLabel(today);
             }

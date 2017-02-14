@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.bwisni.taptracker.ConfirmActivity"
-    tools:showIn="@layout/activity_confirm"
     android:theme="@style/AppTheme"
     android:padding="@dimen/activity_vertical_margin">
 
@@ -22,28 +19,27 @@
             android:layout_height="wrap_content"
             android:text="@string/creditsString"
             android:id="@+id/creditsString"
-            android:layout_gravity="right"
-            android:textSize="@dimen/abc_text_size_display_2_material"
+            android:textSize="@style/TextAppearance.AppCompat.Display2"
             android:layout_below="@+id/drinkerConfirmCredits"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:visibility="gone" />
 
         <TextSwitcher
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/drinkerConfirmCredits"
-            android:layout_gravity="right"
             android:layout_centerHorizontal="true"
-            android:layout_centerInParent="true" />
+            android:layout_centerInParent="true"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="New Text"
             android:id="@+id/drinkerConfirmName"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textSize="@dimen/abc_text_size_display_3_material"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display4"
             android:alpha="1"
-            android:layout_above="@+id/drinkerConfirmCredits"
+            android:layout_centerVertical="true"
             android:layout_centerHorizontal="true" />
 
     </RelativeLayout>
@@ -52,7 +48,6 @@
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_toEndOf="@+id/creditsString"
         android:layout_alignParentBottom="true"
         android:id="@+id/pieLayout"
         android:layout_width="350dp">
@@ -75,7 +70,8 @@
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"
             android:layout_width="125dp"
-            android:layout_height="125dp" />
+            android:layout_height="125dp"
+            android:contentDescription="@string/user_icon" />
 
     </RelativeLayout>
 
