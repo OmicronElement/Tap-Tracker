@@ -1012,31 +1012,4 @@ public class MainActivity extends AppCompatActivity {
             mNfcAdapter.disableForegroundDispatch(this);
         }
     }
-
-    class WizardPagerAdapter extends PagerAdapter {
-
-        public Object instantiateItem(ViewGroup collection, int position) {
-
-            int resId = 0;
-            switch (position) {
-                case 0:
-                    resId = R.id.page_one;
-                    break;
-                case 1:
-                    resId = R.id.page_two;
-                    break;
-            }
-            return findViewById(resId);
-        }
-
-        @Override
-        public int getCount() {
-            return 2;
-        }
-
-        @Override
-        public boolean isViewFromObject(View arg0, Object arg1) {
-            return arg0 == ((View) arg1);
-        }
-    }
 }
