@@ -39,17 +39,9 @@
             android:key="sound_preference" />
 
     </PreferenceCategory>
-    <PreferenceCategory android:title="Misc">
-        <com.jrummyapps.android.colorpicker.ColorPreference
-            android:defaultValue="@color/colorAccent"
-            android:key="graph_color"
-            android:title="Graph Color"
-            app:showAlphaSlider="false"
-            app:colorPresets="@array/mdcolor_A400"/>
-
-
+    <PreferenceCategory android:title="Display">
         <EditTextPreference
-            android:defaultValue="Welcome!"
+            android:defaultValue="@string/banner_text"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="Banner Text"
@@ -62,5 +54,14 @@
             android:key="switch_screen_awake_preference"
             />
 
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Tablet Display">
+    <com.jrummyapps.android.colorpicker.ColorPreference
+        android:defaultValue="@color/colorAccent"
+        android:key="graph_color"
+        android:title="Graph Color"
+        app:showAlphaSlider="false"
+        app:colorPresets="@array/mdcolor_A400"/>
     </PreferenceCategory>
 </PreferenceScreen>

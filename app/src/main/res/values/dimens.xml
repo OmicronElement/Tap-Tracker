@@ -5,11 +5,5 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="dialoguePad">65dp</dimen>
     <dimen name="snackbar_textsize">20dp</dimen>
-    <dimen name="graphs_layout_height">260dp</dimen>
-    <dimen name="pie_chart_width">250dp</dimen>
     <dimen name="camera_icon_size">75dp</dimen>
-    <dimen name="abc_text_size_display_1_material">34sp</dimen>
-    <dimen name="abc_text_size_display_2_material">45sp</dimen>
-    <dimen name="abc_text_size_display_3_material">56sp</dimen>
-    <dimen name="abc_text_size_display_4_material">112sp</dimen>
 </resources>

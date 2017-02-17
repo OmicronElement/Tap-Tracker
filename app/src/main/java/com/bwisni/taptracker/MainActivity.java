@@ -3,6 +3,7 @@ package com.bwisni.taptracker;
 import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -17,6 +18,9 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -26,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
@@ -74,6 +79,8 @@ import lecho.lib.hellocharts.view.ColumnChartView;
 import lecho.lib.hellocharts.view.ComboLineColumnChartView;
 import lecho.lib.hellocharts.view.PieChartView;
 
+import static android.support.v7.appcompat.R.id.wrap_content;
+
 public class MainActivity extends AppCompatActivity {
     protected static final String SMS_NUMBER = "1521";
     protected static final String NDEF_PREFIX = "sms:" + SMS_NUMBER + "?body=";
@@ -102,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
     public static final int DEFAULT_KEG_SIZE = 165;
     protected static int beersInKeg = DEFAULT_KEG_SIZE;
 
-    @Bind(R.id.mainLayout)
-    RelativeLayout mainLayout;
+    @Bind(R.id.coordinatorLayout)
+    CoordinatorLayout mainLayout;
     @Bind(R.id.bannerTextView)
     TextView bannerTextView;
     @Bind(R.id.kegTextView)
@@ -150,8 +157,13 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         ButterKnife.bind(this);
         registerForContextMenu(drinkersListView);
+
         SugarContext.init(getApplicationContext());
         Stetho.initializeWithDefaults(this);
+
+        WizardPagerAdapter adapter = new WizardPagerAdapter();
+        ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        pager.setAdapter(adapter);
 
         checkPermissions();
 
@@ -188,13 +200,20 @@ public class MainActivity extends AppCompatActivity {
     private void checkFirstLaunch() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean firstLaunch = sharedPreferences.getBoolean("first_launch", true);
-        if(firstLaunch){
-            // Display instructions
-        }
 
-        /*SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean("first_launch", false);
-        editor.apply();*/
+        if(firstLaunch){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.dialog_first_launch)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // Dismiss
+                        }
+                    }).show();
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("first_launch", false);
+            editor.apply();
+        }
     }
 
 
@@ -501,6 +520,7 @@ public class MainActivity extends AppCompatActivity {
                 CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) view.getLayoutParams();
                 params.gravity = Gravity.BOTTOM | Gravity.LEFT;
                 params.leftMargin = params.bottomMargin = (int) getResources().getDimension(R.dimen.activity_vertical_margin);
+                params.width = CoordinatorLayout.LayoutParams.WRAP_CONTENT;
                 view.setLayoutParams(params);
                 snackbar.show();
             }
@@ -784,7 +804,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Add a drinker
     @OnClick(R.id.fab)
-    public void onFabClick(View view) {
+    public void onFabClick() {
         // Create intent to open up dialogue
         Intent intent = new Intent(getApplicationContext(),
                 AddDrinkerActivity.class);
@@ -850,8 +870,8 @@ public class MainActivity extends AppCompatActivity {
             Drinker drinker = drinkersArrayList.get(position);
 
             drinker.setColor(color);
-            // If admin, add credits, else use one
-            if (adminMode) {
+            // If admin, add credits, else use one // disabled for now
+            if (false) {
                 drinker.setCredits(drinker.getCredits() + DEFAULT_CREDITS_REFILL);
             } else {
                 drinker.subtractCredit();
@@ -878,6 +898,7 @@ public class MainActivity extends AppCompatActivity {
         }*/
         if (requestCode == SETTINGS_REQ_CODE){
             // Re-initialize in case something was changed
+            initColors();
             initGraph();
             initBanner();
             initKegGraph();
@@ -910,11 +931,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        // If we don't find a matching nfcId, open new user dialogue
-        if (newUser) {
-            onFabClick(getCurrentFocus());
-        }
-
     }
 
     @Override
@@ -994,6 +1010,33 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (mNfcAdapter != null) {
             mNfcAdapter.disableForegroundDispatch(this);
+        }
+    }
+
+    class WizardPagerAdapter extends PagerAdapter {
+
+        public Object instantiateItem(ViewGroup collection, int position) {
+
+            int resId = 0;
+            switch (position) {
+                case 0:
+                    resId = R.id.page_one;
+                    break;
+                case 1:
+                    resId = R.id.page_two;
+                    break;
+            }
+            return findViewById(resId);
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public boolean isViewFromObject(View arg0, Object arg1) {
+            return arg0 == ((View) arg1);
         }
     }
 }
